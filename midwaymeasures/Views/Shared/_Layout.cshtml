@@ -25,6 +25,10 @@
                     <li>@Html.ActionLink("About", "About", "Home")</li>
                     <li>@Html.ActionLink("Contact", "Contact", "Home")</li>
                 </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="#">Register</a></li>
+                    <li><a href="#" data-login>Login</a></li>
+                </ul>
             </div>
         </div>
     </div>
@@ -35,6 +39,15 @@
             <p>&copy; @DateTime.Now.Year - My ASP.NET Application</p>
         </footer>
     </div>
+    <form class="hide" data-login-form>
+        <label>Email Address:
+            <input type=email required />
+        </label>
+        <label>
+            Password:
+            <input type=password required />
+        </label>
+    </form>
 
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")

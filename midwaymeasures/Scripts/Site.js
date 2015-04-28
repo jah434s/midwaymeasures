@@ -35,6 +35,10 @@ $(document).on('ready', function () {
     if (typeof (fbDataNeeded) != 'undefined') {
         fbDataNeeded.forEach(getFbData);
     }
+    //TODO: use bootstrap modal.
+    $('body').on('click.login', '[data-login]', function () {
+        $('[data-login-form]').show();
+    });
 
     $('body').on('submit', '[data-login-form]', function (e) {
         e.preventDefault();
