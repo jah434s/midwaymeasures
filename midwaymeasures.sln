@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "midwaymeasures", "midwaymeasures\midwaymeasures.csproj", "{F943DBB9-1EE3-4D5C-8FFF-B328698D651A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PublishScripts", "PublishScripts", "{F2C05F71-C874-45B2-85F5-55C205C1689F}"
+	ProjectSection(SolutionItems) = preProject
+		PublishScripts\AzureWebsitePublishModule.psm1 = PublishScripts\AzureWebsitePublishModule.psm1
+		PublishScripts\Publish-WebApplicationWebsite.ps1 = PublishScripts\Publish-WebApplicationWebsite.ps1
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Configurations", "Configurations", "{19A7C241-F650-4E60-8C5A-7FD7B6142B7C}"
+	ProjectSection(SolutionItems) = preProject
+		PublishScripts\Configurations\midwaymeasures-WAWS-dev.json = PublishScripts\Configurations\midwaymeasures-WAWS-dev.json
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F943DBB9-1EE3-4D5C-8FFF-B328698D651A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F943DBB9-1EE3-4D5C-8FFF-B328698D651A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F943DBB9-1EE3-4D5C-8FFF-B328698D651A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F943DBB9-1EE3-4D5C-8FFF-B328698D651A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{19A7C241-F650-4E60-8C5A-7FD7B6142B7C} = {F2C05F71-C874-45B2-85F5-55C205C1689F}
+	EndGlobalSection
+EndGlobal
