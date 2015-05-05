@@ -1,0 +1,67 @@
+﻿@{
+    ViewBag.Title = "Bug Report";
+}
+<h2>@ViewBag.Title</h2>
+
+<form data-bug="form">
+    <label>
+        Date Introduced (approximate)
+        <input type="date" data-bug="date" required />
+    </label>
+    <label>
+        Brief Description
+        <textarea data-bug="description" required></textarea>
+    </label>
+    <fieldset data-bug="people">
+        <legend>Individuals Involved</legend>
+
+    </fieldset>
+    <label>
+        Team
+        <select data-bug="teams" required>
+            <option></option>
+        </select>
+    </label>
+    <button type="submit" class="btn btn-primary">Submit Bug Report</button>
+</form>
+
+@section scripts {
+    <script>
+        //Get People from DB
+        fbRootRef.child('people').on('child_added', function (snapshot) {
+            var person = snapshot.val();
+            var name = person.firstName + ' ' + person.lastName;
+            $('[data-bug="people"]').append('<label><input type=checkbox data-bug="person">' + name + '</label>')
+        });
+
+        //Get Teams from DB
+        fbRootRef.child('teams').on('child_added', function (snapshot) {
+            var team = snapshot.key();
+            $('[data-bug="teams"]').append('<option data-bug="team">' + team + '</option>')
+        });
+
+        $('[data-bug=form]').on('submit', function (e) {
+            e.preventDefault();
+            var bug = {
+                dateIntroduced: Date.parse($('[data-bug=date]').val()),
+                description: $('[data-bug=description]').val(),
+                people: {},
+                team: $('[data-bug=team]:selected').val()
+            }
+
+            $('[data-bug=person]:checked').each(function (index, checkbox) {
+                var person = $(checkbox).parents('label').first().text();
+                bug.people[person] = true;
+            });
+            
+            fbRootRef.child('defects').push(bug, function (error) {
+                if (error) {
+                    alert('Bug not submitted: ' + error)
+                } else {
+                    $('[data-bug=form]').clear();
+                }
+            });
+
+        });
+    </script>
+}
