@@ -40,6 +40,7 @@
             $('[data-bug="teams"]').append('<option data-bug="team">' + team + '</option>')
         });
 
+        //Handle form submission
         $('[data-bug=form]').on('submit', function (e) {
             e.preventDefault();
             var bug = {
@@ -56,9 +57,9 @@
             
             fbRootRef.child('defects').push(bug, function (error) {
                 if (error) {
-                    alert('Bug not submitted: ' + error)
+                    alert('Bug not submitted: ' + error);
                 } else {
-                    $('[data-bug=form]').clear();
+                    $('[data-bug=form]').reset();
                 }
             });
 

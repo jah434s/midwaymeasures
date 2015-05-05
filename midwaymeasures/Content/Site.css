@@ -68,7 +68,7 @@ h1, h2, h3 {
     width:350px;
 }
 
-/*Bug Report*/
+/*BugReport*/
 [data-bug="people"] label {
     display: inline-block;
     margin-right: 2em;
