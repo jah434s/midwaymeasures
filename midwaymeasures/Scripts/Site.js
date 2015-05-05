@@ -7,6 +7,10 @@ var dataPointsToPlot = 8;
 
 var workTypes = ['CAP', 'DAP', 'OFI', 'CAR', 'SEO', 'BUG', 'Support'];
 
+
+
+//var fbDataNeeded = ['teams', 'iterations'];
+
 var dataItemsNeeded = 0;
 
 var fbDataLoaded = 0;
@@ -14,14 +18,23 @@ var trelloDataLoaded = 0;
 
 var trelloDataNeeded = [];
 
-var fbRootRef = new Firebase("https://brilliant-inferno-6678.firebaseio.com/");
-var fbRootRef2 = new Firebase("https://midway-measures.firebaseio.com/");
+var fbRootRef = new Firebase("https://midway-measures.firebaseio.com/");
+
+var teams;
+fbRootRef.child('teams').on('value', function (snapshot) {
+    teams = snapshot.val();
+})
+
+var currentIteration;
+fbRootRef.child('iterations').limitToLast(1).on('value', function (snapshot) {
+    currentIteration = snapshot.val();
+});
 
 var FB = {
-    people: fbRootRef2.child('people'),
-    bucks: fbRootRef2.child('bullseyeBucks'),
-    cards: fbRootRef2.child('cards'),
-    teams: fbRootRef2.child('teams')
+    people: fbRootRef.child('people'),
+    bucks: fbRootRef.child('bullseyeBucks'),
+    cards: fbRootRef.child('cards'),
+    teams: fbRootRef.child('teams')
 };
 
 $(document).on('ready', function () {
@@ -32,22 +45,29 @@ $(document).on('ready', function () {
         expiration: 'never'
     });
 
+    if (loggedIn()) {
+        logInDisplay('in');
+    }
+
     if (typeof (fbDataNeeded) != 'undefined') {
         fbDataNeeded.forEach(getFbData);
     }
-    //TODO: use bootstrap modal.
-    $('body').on('click.login', '[data-login]', function () {
-        $('[data-login-form]').show();
+
+    $('body').on('click.login', '[data-login]', function (e) {
+        e.preventDefault();
+        $('[data-login-modal]').modal('show');
     });
 
     $('body').on('submit', '[data-login-form]', function (e) {
         e.preventDefault();
         logIn();
+        $('[data-login-modal]').modal('hide');
     });
 
-    $('body').on('click', '[data-logout]', function (e) {
+    $('body').on('click.logout', '[data-logout]', function (e) {
         e.preventDefault();
-        fbRootRef2.unauth();
+        fbRootRef.unauth();
+        logInDisplay('out');
     });
 
 
@@ -74,26 +94,40 @@ $(document).on('fbDataLoaded', function () {
         showDataFor('All');
     }
 
-    addTrelloIdForNewMembers();
+    //addTrelloIdForNewMembers();
 });
+
+function loggedIn() {
+    var authData = fbRootRef.getAuth();
+    return !!authData;
+}
 
 
 function logIn() {
-    fbRootRef2.authWithPassword({
+    fbRootRef.authWithPassword({
         email: $('[data-login-email]').val(),
         password: $('[data-login-password]').val()
     }, function (error, authData) {
         if (error) {
-            console.log("Login Failed!", error);
+            alert("Login Failed: ", error);
         } else {
-            console.log("Authenticated successfully with payload:", authData);
+            logInDisplay('in');
         }
     });
 }
 
+function logInDisplay(inOrOut) {
+    if (inOrOut == 'in') {
+        $('[data-logout]').removeClass('hidden');
+        $('[data-login]').addClass('hidden');
+    } else {
+        $('[data-logout]').addClass('hidden');
+        $('[data-login]').removeClass('hidden');
+    }
+}
 
 function getFbData(dataItem) {
-    var ref = fbRootRef2.child(dataItem);
+    var ref = fbRootRef.child(dataItem);
 
     ref.on('child_added', function (snapshot) {
         window[dataItem].push(snapshot.val());
