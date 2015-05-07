@@ -1,0 +1,15 @@
+﻿{
+    "name": "MidwayUSA",
+    "version": "1.0.0",
+    "description" :  "MidwayUSA",
+    "repository": {
+        "type": "git",
+        "url": "http://github.com/npm/npm.git"
+    },
+    "devDependencies": {
+        "gulp": "^3.8.11",
+        "gulp-sass": "^1.3.3",
+        "gulp-sourcemaps": "^1.5.2",
+        "gulp-minify-css":  "^1.1.0"
+    }
+}

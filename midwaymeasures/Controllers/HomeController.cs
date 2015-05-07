@@ -18,6 +18,11 @@ namespace midwaymeasures.Controllers
             return View();
         }
 
+        public ActionResult Admin()
+        {
+            return View();
+        }
+
         public ActionResult Contact()
         {
             ViewBag.Message = "Your contact page.";

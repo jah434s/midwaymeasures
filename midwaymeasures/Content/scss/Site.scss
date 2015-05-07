@@ -40,6 +40,10 @@ label, label input, label textarea, label select {
     display: block;
 }
 
+input[type=date] {
+    line-height: 1em; //bootstrap override
+}
+
 input, textarea, select {
     margin-top: .5em;
     padding: .5em
