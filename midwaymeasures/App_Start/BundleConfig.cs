@@ -24,8 +24,8 @@ namespace midwaymeasures
                       "~/Scripts/respond.js"));
 
             bundles.Add(new StyleBundle("~/Content/css").Include(
-                      "~/Content/css/bootstrap.css",
-                      "~/Content/css/site.css"));
+                      "~/bootstrap.css",
+                      "~/site.css"));
         }
     }
 }
