@@ -1,7 +1,92 @@
-﻿
-@{
+﻿@{
     ViewBag.Title = "Admin";
 }
 
 <h2>Admin</h2>
+<aside class="sync">
+    <button type="button" class="btn btn-success sync-button" data-sync="boards"><i class="glyphicon glyphicon-refresh"></i>Sync Trello Boards</button>
+    <button type="button" class="btn btn-success sync-button" data-sync="cards"><i class="glyphicon glyphicon-refresh"></i>Sync Trello Cards</button>
+</aside>
+
+<ul class="admin-list list-unstyled">
+    <li class="admin-list-item">
+        <a data-toggle="collapse" href="#add-buck" aria-expanded="false" aria-controls="add-buck" class="btn btn-default">
+            <i class="glyphicon glyphicon-plus"></i>Add a Bullseye Buck
+        </a>
+        <div class="collapse" id="add-buck">
+            <div class="well">
+                <form data-buck-form>
+                    <label>
+                        Team Member
+                        <select data-buck-people>
+                            <option></option>
+                        </select>
+                    </label>
+                    <label>
+                        Brief Description
+                        <textarea data-buck-description required></textarea>
+                    </label>
+                    <label>
+                        Team
+                        <select data-buck-teams required>
+                            <option></option>
+                        </select>
+                    </label>
+                    <label>
+                        Date
+                        <input type="date" data-buck-date required />
+                    </label>
+                    <button class="btn btn-primary" type="submit">Add Bullseye Buck</button>
+                </form>
+            </div>
+        </div>
+    </li>
+    <li class="admin-list-item">
+        <a data-toggle="collapse" href="#manage-people" aria-expanded="false" aria-controls="add-buck" class="btn btn-default">
+            <i class="glyphicon glyphicon-plus"></i>Team Members
+        </a>
+        <div id="manage-people"></div>
+    </li>
+</ul>
+
+
+
+
+@section scripts {
+    <script>
+        //Get People from DB
+        fbRootRef.child('people').on('child_added', function (snapshot) {
+            var person = snapshot.val();
+            var name = person.firstName + ' ' + person.lastName;
+            $('[data-buck-people]').append('<option data-buck-person>' + name + '</option>');
+        });
+
+        //Get Teams from DB
+        fbRootRef.child('teams').on('child_added', function (snapshot) {
+            var team = snapshot.key();
+            $('[data-buck-teams]').append('<option data-buck-team>' + team + '</option>')
+        });
+
+        //Handle form submission
+        $('[data-buck-form]').on('submit', function (e) {
+            e.preventDefault();
+            var buck = {
+                time: Date.parse($('[data-buck-date]').val()),
+                description: $('[data-buck-description]').val(),
+                person: $('[data-buck-person]:selected').val(),
+                team: $('[data-buck-team]:selected').val()
+            }
+
+            FB.bucks.push(buck, function (error) {
+                if (error) {
+                    alert('Buck not submitted: ' + error);
+                } else {
+                    $('[data-buck-form]')[0].reset();
+                }
+            });
+
+        });
+    </script>
+}
+
 

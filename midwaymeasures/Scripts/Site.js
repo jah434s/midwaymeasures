@@ -3,6 +3,9 @@
     webProdOrg: '504a56a70022d3d72e198e98'
 };
 
+var numTeams = 0;
+var boardsToUpdate;
+
 var dataPointsToPlot = 8;
 
 var workTypes = ['CAP', 'DAP', 'OFI', 'CAR', 'SEO', 'BUG', 'Support'];
@@ -23,7 +26,8 @@ var fbRootRef = new Firebase("https://midway-measures.firebaseio.com/");
 var teams;
 fbRootRef.child('teams').on('value', function (snapshot) {
     teams = snapshot.val();
-})
+    numTeams = snapshot.numChildren();
+});
 
 var currentIteration;
 fbRootRef.child('iterations').limitToLast(1).on('value', function (snapshot) {
@@ -34,8 +38,14 @@ var FB = {
     people: fbRootRef.child('people'),
     bucks: fbRootRef.child('bullseyeBucks'),
     cards: fbRootRef.child('cards'),
-    teams: fbRootRef.child('teams')
+    teams: fbRootRef.child('teams'),
+    doneLists: fbRootRef.child('doneLists'),
+    iterations: fbRootRef.child('iterations')
 };
+
+FB.teams.on('child_added', function(snapshot) {
+
+});
 
 $(document).on('ready', function () {
 
@@ -215,11 +225,11 @@ function byIteration(el) {
         var defectDate = new Date(el.dateFound);
         return defectDate > iterationStart && defectDate < iterationEnd;
     }
-    //for work items
+        //for work items
     else if (el.dateCompleted) {
         var completedDate = el.dateCompleted;
         return el.dateCompleted > Date.parse(iterationStart) && el.dateCompleted < Date.parse(iterationEnd);
-    //for Bullseye Bucks
+        //for Bullseye Bucks
     } else if (el.time) {
         var buckDate = new Date(el.time);
         return buckDate > iterationStart && buckDate < iterationEnd;
@@ -239,27 +249,202 @@ function setData(array, tableName) {
     });
 }
 
-function addTrelloIdForNewMembers() {
-    var newTrelloMembers = people.filter(function (person) {
-        return person.trelloId == null;
-    });
-    if (newTrelloMembers.length < 1) return;
+//function addTrelloIdForNewMembers() {
+//    var newTrelloMembers = people.filter(function (person) {
+//        return person.trelloId == null;
+//    });
+//    if (newTrelloMembers.length < 1) return;
 
-    Trello.organizations.get(TrelloData.webProdOrg, { 'memberships': 'active' }, function (organization) {
-        $(organization.memberships).each(function () {
-            Trello.members.get(this.idMember, function (member) {
-                console.log(member.fullName);
-                $(newTrelloMembers).each(function () {
-                    var memberName = member.fullName.toLowerCase(),
-                        fName = this.firstName.toLowerCase(),
-                        lName = this.lastName.toLowerCase();
-                    if (memberName.indexOf(fName) < 0 || memberName.indexOf(lName) < 0) return;
+//    Trello.organizations.get(TrelloData.webProdOrg, { 'memberships': 'active' }, function (organization) {
+//        $(organization.memberships).each(function () {
+//            Trello.members.get(this.idMember, function (member) {
+//                console.log(member.fullName);
+//                $(newTrelloMembers).each(function () {
+//                    var memberName = member.fullName.toLowerCase(),
+//                        fName = this.firstName.toLowerCase(),
+//                        lName = this.lastName.toLowerCase();
+//                    if (memberName.indexOf(fName) < 0 || memberName.indexOf(lName) < 0) return;
 
-                    var ref = FB.people.child(this.firstName.toLowerCase() + this.lastName);
-                    ref.update({ 'trelloId': member.id });
-                });
-            });
-        });
+//                    var ref = FB.people.child(this.firstName.toLowerCase() + this.lastName);
+//                    ref.update({ 'trelloId': member.id });
+//                });
+//            });
+//        });
+//    });
+//}
+
+
+$('[data-toggle=collapse]').on('click', function () {
+    $(this).find('i').first().toggleClass('glyphicon-plus').toggleClass('glyphicon-minus');
+});
+
+$('[data-sync=boards]').on('click', updateBoards);
+
+$('[data-sync=cards]').on('click', updateCards);
+
+function updateBoards() {
+    $('[data-sync=boards]').attr('disabled', 'disabled');
+    boardsToUpdate = numTeams;
+    FB.teams.on('child_added', function (snapshot) {
+        updateDoneLists(snapshot.val().board, snapshot.key());
     });
 }
 
+function updateCards() {
+    $('[data-sync=cards]').attr('disabled', 'disabled');
+    //boardsToUpdate = numTeams;
+    FB.doneLists.on('child_added', function (snapshot) {
+        getCardData(snapshot.key(), snapshot.val().team);
+        //getCardData();
+    });
+}
+
+function updateDoneLists(teamBoard, teamName) {
+    Trello.boards.get(teamBoard, { 'lists': 'all' }, function (board) {
+        var boardDoneLists = [];
+
+        //Grab all of the 'Done' lists
+        $(board.lists).each(function () {
+            if (this.name.indexOf('Done') >= 0) {
+                boardDoneLists.push(this);
+            }
+        });
+
+        $(boardDoneLists).each(function () {
+
+            //create list object
+            var list = {
+                team: teamName,
+                name: this.name,
+                id: this.id
+            }
+            var dateString = this.name.substr(5);
+            list.endDate = Date.parse(dateString);
+
+            //Start data collection from 2015
+            var date = new Date(dateString);
+            if (date.getFullYear() == 2015) {
+
+                //add reference to team object
+                var listObj = {};
+                listObj[this.id] = true;
+                FB.teams.child(teamName).child('doneLists').update(listObj, fbCallback);
+
+                //add done list to DB
+                FB.doneLists.child(list.id).update(list, fbCallback);
+
+                //create new iteration for new done lists
+                var iteration = {
+                    endDate : list.endDate
+                }
+                FB.iterations.child(list.endDate).update(iteration, fbCallback);
+            }
+        });
+        boardsToUpdate--;
+        if (boardsToUpdate === 0) {
+            console.log('all boards updated');
+            $('[data-sync=boards]').removeAttr('disabled');
+        }
+    });
+}
+
+var fbCallback = function(error) {
+    if (error) {
+        alert(error);
+    }
+}
+
+
+function getCardData(doneList, teamName) {
+    //update cards
+    Trello.lists.get(doneList, { 'cards': 'open' }, function (list) {
+        var cardsToUpdate = list.cards.length;
+        var listEffort = 0;
+        $(list.cards).each(function () {
+            var cardId = this.id,
+                cardName = this.name,
+                cardPeople = this.idMembers;
+
+            Trello.cards.get(this.id, { 'actions': 'updateCard:idList' }, function (data) {
+                $(data.actions).each(function () {
+                    if (this.data.listAfter.id == doneList) {
+                        var card = {
+                            people: cardPeople,
+                            team: teamName,
+                            dateCompleted: Date.parse(this.date),
+                            desc: cardName
+                        };
+
+                        //get Effort from card name, e.g. '[5]'
+                        var matchesEffort = cardName.match(/\[(.*?)\]/);
+                        if (matchesEffort) {
+                            var effort = matchesEffort[1];
+                            if (effort == '1/2') effort = .5;
+                            card.effort = effort;
+                            listEffort += parseFloat(effort);
+                        }
+
+                        //Get work type from card name (DAP, OFI, ect.)
+                        $(workTypes).each(function (index, value) {
+                            if (cardName.indexOf(value) < 0) {
+                                card.workType = 'Other';
+                                return;
+                            };
+                            card.workType = value;
+                        });
+
+                        //Add Card to DB
+                        var cardRef = FB.cards.child(cardId);
+                        cardRef.set(card, function (error) {
+                            if (error) {
+                                throw new Error('failed to add card to DB:' + error);
+                            } else {
+                                // console.log('card added to cards');
+                            }
+                        });
+
+                        cardsToUpdate--;
+                        if (cardsToUpdate == 0) {
+
+                            FB.doneLists.child(doneList).update({
+                                effort: listEffort
+                            }, fbCallback);
+
+                            //FB.iterations.child(doneList.endDate).update({
+                                
+                            //}, fbCallback);
+                        }
+                    }
+                });
+            });
+
+            //Add Card reference to team
+            var teamCardsRef = FB.teams.child(teamName).child('cards');
+            var teamCard = {};
+            teamCard[cardId] = true;
+            teamCardsRef.update(teamCard, function () {
+                //console.log('card added to team');
+            });
+
+            //Add Card reference to person
+            $(this.idMembers).each(function () {
+                var trelloId = this.toString();
+
+                //NEED TO FIX THIS
+                var person = people.filter(function (el) {
+                    return el.trelloId == trelloId;
+                })[0];
+                if (person) {
+                    var fbPerson = person.firstName.toLowerCase() + person.lastName;
+                    var cardsRef = FB.people.child(fbPerson).child('cards');
+                    var personalCard = {};
+                    personalCard[cardId] = true;
+                    cardsRef.update(personalCard, function () {
+                        //console.log('card added to person');
+                    });
+                }
+            });
+        });
+    });
+
+}
