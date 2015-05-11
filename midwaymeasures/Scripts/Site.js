@@ -13,6 +13,7 @@ var workTypes = ['CAP', 'DAP', 'OFI', 'CAR', 'SEO', 'BUG', 'Support'];
 
 
 //var fbDataNeeded = ['teams', 'iterations'];
+var doneLists = [];
 
 var dataItemsNeeded = 0;
 
@@ -40,7 +41,8 @@ var FB = {
     cards: fbRootRef.child('cards'),
     teams: fbRootRef.child('teams'),
     doneLists: fbRootRef.child('doneLists'),
-    iterations: fbRootRef.child('iterations')
+    iterations: fbRootRef.child('iterations'),
+    defects: fbRootRef.child('defects')
 };
 
 FB.teams.on('child_added', function(snapshot) {
@@ -291,11 +293,8 @@ function updateBoards() {
 }
 
 function updateCards() {
-    $('[data-sync=cards]').attr('disabled', 'disabled');
-    //boardsToUpdate = numTeams;
-    FB.doneLists.on('child_added', function (snapshot) {
+    FB.doneLists.limitToLast(4).on('child_added', function (snapshot) {
         getCardData(snapshot.key(), snapshot.val().team);
-        //getCardData();
     });
 }
 
@@ -369,11 +368,17 @@ function getCardData(doneList, teamName) {
                 $(data.actions).each(function () {
                     if (this.data.listAfter.id == doneList) {
                         var card = {
-                            people: cardPeople,
+                            people: {},
                             team: teamName,
                             dateCompleted: Date.parse(this.date),
                             desc: cardName
                         };
+
+                        $.each(cardPeople, function(index, id) {
+                            card.people[id] = true;
+                        });
+
+                        
 
                         //get Effort from card name, e.g. '[5]'
                         var matchesEffort = cardName.match(/\[(.*?)\]/);
@@ -386,22 +391,18 @@ function getCardData(doneList, teamName) {
 
                         //Get work type from card name (DAP, OFI, ect.)
                         $(workTypes).each(function (index, value) {
-                            if (cardName.indexOf(value) < 0) {
-                                card.workType = 'Other';
-                                return;
+                            if (cardName.indexOf(value) >= 0) {
+                                card.workType = value;
                             };
-                            card.workType = value;
+                            //card.workType = 'Other';
                         });
+                        if (!card.workType) {
+                            card.workType = 'Other';
+                        }
 
                         //Add Card to DB
                         var cardRef = FB.cards.child(cardId);
-                        cardRef.set(card, function (error) {
-                            if (error) {
-                                throw new Error('failed to add card to DB:' + error);
-                            } else {
-                                // console.log('card added to cards');
-                            }
-                        });
+                        cardRef.set(card, function() {  });
 
                         cardsToUpdate--;
                         if (cardsToUpdate == 0) {
@@ -431,18 +432,25 @@ function getCardData(doneList, teamName) {
                 var trelloId = this.toString();
 
                 //NEED TO FIX THIS
-                var person = people.filter(function (el) {
-                    return el.trelloId == trelloId;
-                })[0];
-                if (person) {
-                    var fbPerson = person.firstName.toLowerCase() + person.lastName;
-                    var cardsRef = FB.people.child(fbPerson).child('cards');
-                    var personalCard = {};
-                    personalCard[cardId] = true;
-                    cardsRef.update(personalCard, function () {
-                        //console.log('card added to person');
-                    });
-                }
+                var personalCard = {};
+                personalCard[cardId] = true;
+                FB.people.orderByChild('trelloId').equalTo(trelloId).on('child_added', function(snapshot) {
+                    FB.people.child(snapshot.key()).child('cards').update(personalCard, fbCallback);
+                });
+                //fbPerson.child('cards').update(personalCard, fbCallback);
+
+                //var person = people.filter(function (el) {
+                //    return el.trelloId == trelloId;
+                //})[0];
+                //if (person) {
+                //    var fbPerson = person.firstName.toLowerCase() + person.lastName;
+                //    var cardsRef = FB.people.child(fbPerson).child('cards');
+                //    var personalCard = {};
+                //    personalCard[cardId] = true;
+                //    cardsRef.update(personalCard, function () {
+                //        //console.log('card added to person');
+                //    });
+                //}
             });
         });
     });

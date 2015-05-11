@@ -54,15 +54,38 @@
                 var person = $(checkbox).parents('label').first().text();
                 bug.people[person] = true;
             });
-            
-            fbRootRef.child('defects').push(bug, function (error) {
+
+            //add defect to DB
+            FB.defects.push(bug, function (error) {
                 if (error) {
-                    alert('Bug not submitted: ' + error);
+                    alert(error);
                 } else {
-                    $('[data-bug=form]')[0].reset();
+                    //After the defect is added...
+                    FB.defects.on('child_added', function (defect) {
+                        //create defect reference
+                        var defectObj = {};
+                        defectObj[defect.key()] = true;
+
+                        //add defect reference to iteration
+                        FB.iterations.on('child_added', function (iteration) {
+                            if (defect.val().dateIntroduced < iteration.val().endDate) {
+                                FB.iterations.off('child_added');
+                                FB.iterations.child(iteration.val().endDate).child(defect.val().team).child('defects').update(defectObj, fbCallback);
+                            }
+                        });
+
+                        //add defect reference to person
+                        $.each(Object.keys(defect.val().people), function (index, person) {
+                            FB.people.child(person).child('defects').update(defectObj, fbCallback);
+                        });
+
+                        //add defect reference to team
+                        FB.teams.child(defect.val().team).child('defects').update(defectObj, fbCallback);
+
+                    });
                 }
             });
-
         });
+
     </script>
 }
