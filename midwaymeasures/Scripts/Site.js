@@ -24,6 +24,8 @@ var trelloDataNeeded = [];
 
 var fbRootRef = new Firebase("https://midway-measures.firebaseio.com/");
 
+var authData = fbRootRef.getAuth();
+
 var teams;
 fbRootRef.child('teams').on('value', function (snapshot) {
     teams = snapshot.val();
@@ -42,7 +44,8 @@ var FB = {
     teams: fbRootRef.child('teams'),
     doneLists: fbRootRef.child('doneLists'),
     iterations: fbRootRef.child('iterations'),
-    defects: fbRootRef.child('defects')
+    defects: fbRootRef.child('defects'),
+    users: fbRootRef.child('users')
 };
 
 FB.teams.on('child_added', function(snapshot) {
@@ -58,7 +61,10 @@ $(document).on('ready', function () {
     });
 
     if (loggedIn()) {
-        logInDisplay('in');
+        $('body').addClass('logged-in').removeClass('logged-out');
+        if (isAdmin) {
+            $('body').addClass('admin');
+        }
     }
 
     if (typeof (fbDataNeeded) != 'undefined') {
@@ -79,7 +85,7 @@ $(document).on('ready', function () {
     $('body').on('click.logout', '[data-logout]', function (e) {
         e.preventDefault();
         fbRootRef.unauth();
-        logInDisplay('out');
+        $('body').removeClass('logged-in').removeClass('admin').addClass('logged-out');
     });
 
 
@@ -110,8 +116,13 @@ $(document).on('fbDataLoaded', function () {
 });
 
 function loggedIn() {
-    var authData = fbRootRef.getAuth();
     return !!authData;
+}
+
+function isAdmin() {
+    FB.users.child(authData.auth.uid).once('value', function (snapshot) {
+        return snapshot.val().isAdmin;
+    });
 }
 
 
@@ -123,19 +134,13 @@ function logIn() {
         if (error) {
             alert("Login Failed: ", error);
         } else {
-            logInDisplay('in');
+            //console.log(authData.auth);
+            $('body').addClass('logged-in').removeClass('logged-out');
+            if (isAdmin) {
+                $('body').addClass('admin');
+            }
         }
     });
-}
-
-function logInDisplay(inOrOut) {
-    if (inOrOut == 'in') {
-        $('[data-logout]').removeClass('hidden');
-        $('[data-login]').addClass('hidden');
-    } else {
-        $('[data-logout]').addClass('hidden');
-        $('[data-login]').removeClass('hidden');
-    }
 }
 
 function getFbData(dataItem) {
@@ -293,6 +298,7 @@ function updateBoards() {
 }
 
 function updateCards() {
+    //TODO: Figure out how to alert when card syncing is done
     FB.doneLists.limitToLast(4).on('child_added', function (snapshot) {
         getCardData(snapshot.key(), snapshot.val().team);
     });

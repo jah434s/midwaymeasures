@@ -3,12 +3,12 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewBag.Title - My ASP.NET Application</title>
+    <title>@ViewBag.Title | Web Production Measures</title>
     <link rel="stylesheet" href="/Content/css/bootstrap.css"/>
     <link rel="stylesheet" href="/Content/css/Site.css" />
     @Scripts.Render("~/bundles/modernizr")
 </head>
-<body>
+<body class="logged-out">
     <div class="navbar">
         <div class="container">
             <div class="navbar-header">
@@ -23,14 +23,14 @@
             </div>
             <div class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
-                    <li>@Html.ActionLink("Bug Report", "BugReport", "Home")</li>
-                    <li>@Html.ActionLink("Admin", "Admin", "Home")</li>
-                    <li>@Html.ActionLink("Contact", "Contact", "Home")</li>
+                    <li class="top-nav-item">@Html.ActionLink("Bug Report", "BugReport", "Home")</li>
+                    <li class="top-nav-item admin-content">@Html.ActionLink("Admin", "Admin", "Home")</li>
+                    @*<li>@Html.ActionLink("Contact", "Contact", "Home")</li>*@
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     <!--<li><a href="#">Register</a></li>-->
-                    <li><a href="#" data-logout class="hidden">Log Out</a></li>
-                    <li><a href="#" data-login>Log In</a></li>
+                    <li class="right-nav-item logged-in-content"><a href="#" data-logout>Log Out</a></li>
+                    <li class="right-nav-item logged-out-content"><a href="#" data-login>Log In</a></li>
                 </ul>
             </div>
         </div>

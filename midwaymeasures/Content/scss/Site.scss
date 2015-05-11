@@ -69,6 +69,28 @@ h1, h2, h3 {
     margin-bottom: 1em;
 }
 
+.admin-content, .logged-in-content, .logged-out-content {
+    display:none !important;
+}
+
+.admin {
+    .top-nav-item.admin-content {
+        display:block !important;
+    }
+}
+
+.logged-in {
+    .right-nav-item.logged-in-content {
+        display: block !important;
+    }
+}
+
+.logged-out {
+    .right-nav-item.logged-out-content {
+        display: block !important;
+    }
+}
+
 /*Login Form*/
 [data-login-modal] .modal-dialog {
     width: 350px;
