@@ -300,11 +300,10 @@ var fbCallback = function(error) {
 
 
 function getCardData(doneList, teamName) {
-    //update cards
+
     Trello.lists.get(doneList, { 'cards': 'open' }, function (list) {
 
         var cardsToUpdate = list.cards.length;
-        console.log(cardsToUpdate, doneList);
         var listEffort = 0;
 
         $(list.cards).each(function () {

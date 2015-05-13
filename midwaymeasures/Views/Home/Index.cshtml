@@ -6,20 +6,96 @@
 <h1>Web Production Measures</h1>
 
 <div class="row">
-    <div class="col-lg-1">
-        <h2>Velocity</h2>
-        <ul data-velocity-list></ul>
+    <div class="col-lg-12 result-section">
+        <h2>Average Velocity</h2>
+        <ul data-velocity-list class="list-unstyled"></ul>
+    </div>
+    <div class="col-lg-12 result-section">
+        <h2>Bug Free Releases</h2>
+        <ul data-quality-list class="list-unstyled"></ul>
+    </div>
+    <div class="col-lg-12 result-section">
+        <h2>Consistency</h2>
+        <ul data-consistency-list class="list-unstyled"></ul>
     </div>
 </div>
 
-<template data-template="velocity">
-    <li class="col-md-4">
-        <h3 data-team>Team North</h3>
-        <dl>
-            <dt>Average: </dt>
-            <dd data-average></dd>
-            <dt>Most Recent: </dt>
-            <dd data-last></dd>
-        </dl>
+<template data-template="result">
+    <li class="col-md-3 result-item">
+        <h3 data-team class="result-item-title"></h3>
+        <strong data-result class="result-item-value"></strong>
     </li>
 </template>
+
+@section scripts {
+    <script>
+        var theTeams = {};
+
+        FB.teams.on('child_added', function (snapshot) {
+            var obj = {
+                name: snapshot.val().name,
+                effort: [],
+                cards: [],
+                defects: []
+            };
+            theTeams[obj.name] = obj;
+        });
+
+        FB.teams.on('value', function () {
+            $.each(Object.keys(theTeams), function (index, team) {
+                FB.iterations.on('child_added', function (snapshot) {
+
+                    theTeams[team].effort.push(snapshot.val()[team].effort || 0);
+
+                    var cards = snapshot.val()[team].cards || 0;
+                    if (cards) {
+                        theTeams[team].cards.push(Object.keys(snapshot.val()[team].cards).length);
+                    } else {
+                        theTeams[team].cards.push(0);
+                    }
+
+                    var defects = snapshot.val()[team].defects || 0;
+                    if (defects) {
+                        theTeams[team].defects.push(Object.keys(snapshot.val()[team].defects).length);
+                    } else {
+                        theTeams[team].defects.push(0);
+                    }
+
+                });
+            });
+        });
+
+        FB.iterations.on('value', function () {
+            $.each(Object.keys(theTeams), function (index, teamName) {
+                var velocities = theTeams[teamName].effort;
+                var velocitySum = velocities.reduce(function (a, b) {
+                    return a + b;
+                });
+                var velocityAvg = velocitySum / velocities.length;
+                var velocityDisplay = $($('[data-template=result]').html().trim());
+
+                velocityDisplay.find('[data-team]').text('Team ' + teamName);
+                velocityDisplay.find('[data-result]').text(velocityAvg);
+
+                var cards = theTeams[teamName].cards;
+                var cardsSum = cards.reduce(function(a, b) {
+                    return a + b;
+                });
+                var defects = theTeams[teamName].defects;
+                var defectsSum = defects.reduce(function (a, b) {
+                    return a + b;
+                });
+                var qualityDisplay = $($('[data-template=result]').html().trim());
+
+                console.log(defectsSum, cardsSum);
+
+                qualityDisplay.find('[data-team]').text('Team ' + teamName);
+                qualityDisplay.find('[data-result]').text(100 - ((defectsSum / cardsSum ).toFixed(2) * 100) + '%');
+
+                $('[data-velocity-list]').append(velocityDisplay);
+                $('[data-quality-list]').append(qualityDisplay);
+            });
+        });
+
+    </script>
+}

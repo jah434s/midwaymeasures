@@ -70,12 +70,12 @@ h1, h2, h3 {
 }
 
 .admin-content, .logged-in-content, .logged-out-content {
-    display:none !important;
+    display: none !important;
 }
 
 .admin {
     .top-nav-item.admin-content {
-        display:block !important;
+        display: block !important;
     }
 }
 
@@ -131,4 +131,29 @@ h1, h2, h3 {
         margin-right: 0.3em;
         font-size: .8em;
     }
+}
+
+// Results
+
+.result-section {
+    margin-bottom: 2em;
+}
+
+.result-item {
+    border: 1px solid $gray-light;
+    padding: 1em;
+    border-radius: 10px;
+    margin-right: 3em;
+}
+
+.result-item-title {
+    margin-bottom: .5em;
+    margin-top: 0;
+    border-bottom: 1px solid $gray-lighter;
+    text-transform: capitalize;
+    padding-bottom: .4em;
+}
+
+.result-item-value {
+    font-size: 5em;
 }
