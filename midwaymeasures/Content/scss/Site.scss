@@ -36,9 +36,13 @@ label, fieldset {
 legend {
     font-size: 1.1em;
     font-weight: bold;
+    margin-bottom: 1em;
 }
 
-label, label input, label textarea, label select {
+label {
+    input[type=text], input[type=password], input[type=email], select, textarea, input[type=date] {
+        display: block;
+    }
     display: block;
 }
 
@@ -119,18 +123,67 @@ h1, h2, h3 {
     }
 }
 
+.admin-nav {
+    font-size: 1.6em;
+        margin-bottom: .5em;
+}
+
 .admin-list-item {
     margin-bottom: .5em;
+}
 
-    .btn-default {
-        font-size: 1.6em;
-        margin-bottom: .5em;
-    }
+.btn-icon {
+    margin-right: .5em;
+    font-size: .9em;
+}
 
-    .glyphicon {
-        margin-right: 0.3em;
-        font-size: .8em;
+.admin-person-list-item {
+    &:first-child .admin-person {
+        border-top-width: 0;
     }
+    .well {
+        background: white;
+    }
+}
+
+.people-container {
+    padding-top: 0;
+    padding-bottom: 0;
+
+    & > .btn-default {
+        margin: 2em 0;
+    }
+}
+
+.admin-person {
+    font-size: 1.2em;
+    border-top: 1px solid $gray-light;
+    padding: .6em 0;
+    display: block;
+    cursor: pointer;
+    &:hover {
+        text-decoration: none;
+        background: #efefef;
+    }
+}
+
+.admin-person-edit {
+    margin-right: .5em;
+    padding-right: .5em;
+    border-right: 1px solid darken($gray-lighter, 15%);
+    cursor: pointer;
+    position: relative;
+    top: 3px;
+
+    &:hover {
+        color: $btn-info-bg;
+    }
+}
+
+.status-option {
+    display: inline-block;
+    margin-right: 1em;
+    margin-bottom: 0;
 }
 
 // Results
