@@ -128,7 +128,7 @@
         FB.teams.on('value', function (teams) {
             var teamNames = Object.keys(teams.val());
 
-            FB.people.on('child_added', function (snapshot) {
+            FB.people.orderByChild('status').equalTo('active').on('child_added', function (snapshot) {
                 var person = snapshot.val();
                 var name = person.firstName + ' ' + person.lastName;
                 var nameId = person.firstName + person.lastName;

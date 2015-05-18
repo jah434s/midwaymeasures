@@ -28,10 +28,10 @@
 @section scripts {
     <script>
         //Get People from DB
-        fbRootRef.child('people').on('child_added', function (snapshot) {
+        fbRootRef.child('people').orderByChild('status').equalTo('active').on('child_added', function (snapshot) {
             var person = snapshot.val();
             var name = person.firstName + ' ' + person.lastName;
-            $('[data-bug="people"]').append('<label><input type=checkbox data-bug="person">' + name + '</label>')
+            $('[data-bug="people"]').append('<label><input type=checkbox data-bug="person">' + name + '</label>');
         });
 
         //Get Teams from DB
