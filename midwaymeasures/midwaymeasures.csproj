@@ -207,6 +207,13 @@
     <None Include="Properties\PublishProfiles\midwaymeasures - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\midwaymeasures.pubxml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
+    <Content Include="Scripts\ChartJS\Chart.Bar.js" />
+    <Content Include="Scripts\ChartJS\Chart.Core.js" />
+    <Content Include="Scripts\ChartJS\Chart.Doughnut.js" />
+    <Content Include="Scripts\ChartJS\Chart.js" />
+    <Content Include="Scripts\ChartJS\Chart.Line.js" />
+    <Content Include="Scripts\ChartJS\Chart.PolarArea.js" />
+    <Content Include="Scripts\ChartJS\Chart.Radar.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
     <Content Include="Scripts\jquery-1.10.2.min.js" />
     <None Include="Scripts\jquery.validate-vsdoc.js" />

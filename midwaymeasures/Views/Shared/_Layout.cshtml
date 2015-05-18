@@ -76,7 +76,10 @@
     @Scripts.Render("~/bundles/bootstrap")
     <script src="https://api.trello.com/1/client.js?key=aaaccf39e74da6f15762c374cbcb5888"></script>
     <script src="https://cdn.firebase.com/js/client/2.2.4/firebase.js"></script>
+    @Scripts.Render("~/Scripts/ChartJS/Chart.js")
+    @Scripts.Render("~/Scripts/ChartJS/Chart.Line.js")
     @Scripts.Render("~/Scripts/Site.js")
+
     @RenderSection("scripts", required: false)
 </body>
 </html>

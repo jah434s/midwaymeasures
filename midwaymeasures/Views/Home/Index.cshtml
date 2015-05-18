@@ -19,11 +19,15 @@
         <ul data-consistency-list class="list-unstyled"></ul>
     </div>*@
 </div>
+<div class="row">
+    <canvas data-chart></canvas>
+</div>
 
 <template data-template="result">
-    <li class="col-md-3 result-item">
+    <li class="col-md-4 result-item" data-result-container>
         <h3 data-team class="result-item-title"></h3>
         <strong data-result class="result-item-value"></strong>
+        <canvas data-chart></canvas>
     </li>
 </template>
 
@@ -36,7 +40,8 @@
                 name: snapshot.val().name,
                 effort: [],
                 cards: [],
-                defects: []
+                defects: [],
+                quality: []
             };
             theTeams[obj.name] = obj;
         });
@@ -61,6 +66,18 @@
                         theTeams[team].defects.push(0);
                     }
 
+                    var totalCards = theTeams[team].cards;
+                    var cardsSum = totalCards.reduce(function(a, b) {
+                        return a + b;
+                    });
+
+                    var totalDefects = theTeams[team].defects;
+                    var defectsSum = totalDefects.reduce(function (a, b) {
+                        return a + b;
+                    });
+
+                    theTeams[team].quality.push(100 - ((defectsSum / cardsSum).toFixed(2) * 100));
+
                 });
             });
         });
@@ -77,23 +94,31 @@
                 velocityDisplay.find('[data-team]').text('Team ' + teamName);
                 velocityDisplay.find('[data-result]').text(velocityAvg);
 
-                var cards = theTeams[teamName].cards;
-                var cardsSum = cards.reduce(function(a, b) {
-                    return a + b;
-                });
-                var defects = theTeams[teamName].defects;
-                var defectsSum = defects.reduce(function (a, b) {
-                    return a + b;
-                });
+                
+
+                var qualities = theTeams[teamName].quality;
+                var currentQuality = qualities[qualities.length - 1];
                 var qualityDisplay = $($('[data-template=result]').html().trim());
 
                 qualityDisplay.find('[data-team]').text('Team ' + teamName);
-                qualityDisplay.find('[data-result]').text(100 - ((defectsSum / cardsSum ).toFixed(2) * 100) + '%');
+                qualityDisplay.find('[data-result]').text(currentQuality + '%');
+                
 
                 $('[data-velocity-list]').append(velocityDisplay);
                 $('[data-quality-list]').append(qualityDisplay);
+                
+                var chartContainer = $('[data-velocity-list] [data-result-container]:last-child').find('[data-chart]');
+                makeChart([velocities], chartContainer);
+                chartContainer = $('[data-quality-list] [data-result-container]:last-child').find('[data-chart]');
+                makeChart([qualities], chartContainer);
+
             });
+
+            
+
         });
+
+        
 
     </script>
 }

@@ -3,29 +3,13 @@
     webProdOrg: '504a56a70022d3d72e198e98'
 };
 
-var numTeams = 0;
-var boardsToUpdate;
-
-var dataPointsToPlot = 8;
+var dataPointsToPlot = 9;
 
 var workTypes = ['CAP', 'DAP', 'OFI', 'CAR', 'SEO', 'BUG', 'Support'];
-
-var doneLists = [];
 
 var fbRootRef = new Firebase("https://midway-measures.firebaseio.com/");
 
 var authData = fbRootRef.getAuth();
-
-var teams;
-fbRootRef.child('teams').on('value', function (snapshot) {
-    teams = snapshot.val();
-    numTeams = snapshot.numChildren();
-});
-
-var currentIteration;
-fbRootRef.child('iterations').limitToLast(1).on('value', function (snapshot) {
-    currentIteration = snapshot.val();
-});
 
 var FB = {
     people: fbRootRef.child('people'),
@@ -39,8 +23,6 @@ var FB = {
 };
 
 $(document).on('ready', function () {
-
-    
 
     if (loggedIn()) {
         $('body').addClass('logged-in').removeClass('logged-out');
@@ -88,7 +70,6 @@ function isAdmin() {
     });
 }
 
-
 function logIn() {
     fbRootRef.authWithPassword({
         email: $('[data-login-email]').val(),
@@ -97,7 +78,6 @@ function logIn() {
         if (error) {
             alert("Login Failed: ", error);
         } else {
-            //console.log(authData.auth);
             $('body').addClass('logged-in').removeClass('logged-out');
             if (isAdmin) {
                 $('body').addClass('admin');
@@ -106,28 +86,7 @@ function logIn() {
     });
 }
 
-//This is kind of ugly...
-function formatDate(dateString) {
-    return dateString.substring(0, 10) + 'T06:00:00';
-}
-
-//function getData(table, storageArray) {
-//    var ref = fbRootRef.child(table);
-//    ref.on('value', function (snapshot) {
-//        var items = snapshot.val();
-//        $.each(items, function (index) {
-//            storageArray[index] = this;
-//        });
-//        dataItemsLoaded++;
-//        if (dataItemsLoaded == dataItemsNeeded) {
-//            $(document).trigger('dataLoaded');
-//        }
-//    }, function (errorObject) {
-//        console.log("The read failed: " + errorObject.code);
-//    });
-//}
-
-function makeChart(dataArray) {
+function makeChart(dataArray, container) {
     var colors = ['rgba(151, 187, 205, 1)', 'rgba(186, 218, 85, 1)', 'rgba(220, 220, 220, 1)'];
     var labelsArray = [];
     for (var j = 0; j < dataPointsToPlot; j++) {
@@ -137,7 +96,7 @@ function makeChart(dataArray) {
     var chartInfo = [];
     for (var i = 0; i < dataArray.length; i++) {
         chartInfo[i] = {
-            label: teams[i].name,
+            label: 'team',
             fillColor: colors[i].replace(', 1)', ', 0.2)'),
             strokeColor: colors[i],
             pointColor: colors[i],
@@ -153,10 +112,10 @@ function makeChart(dataArray) {
         datasets: chartInfo
     };
 
-    var ctx = $('[data-chart]').get(0).getContext("2d");
+    var ctx = container.get(0).getContext("2d");
 
     var myLineChart = new Chart(ctx).Line(data);
-    $('[data-chart]').after(myLineChart.generateLegend());
+    //$('[data-chart]').after(myLineChart.generateLegend());
 }
 
 //function byTeam(el) {
@@ -183,17 +142,6 @@ function makeChart(dataArray) {
 //    return false;
 //}
 
-//function setData(array, tableName) {
-//    var dataReference = fbRootRef.child(tableName);
-
-//    dataReference.set(array, function (error) {
-//        if (error) {
-//            alert("Data not saved. " + error);
-//        } else {
-//            location.reload();
-//        }
-//    });
-//}
 
 //function addTrelloIdForNewMembers() {
 //    var newTrelloMembers = people.filter(function (person) {
@@ -219,6 +167,12 @@ function makeChart(dataArray) {
 //    });
 //}
 
+var fbCallback = function (error) {
+    if (error) {
+        alert(error);
+    }
+}
+
 
 $('[data-toggle=collapse]').on('click', function () {
     $(this).find('i').first().toggleClass('glyphicon-plus').toggleClass('glyphicon-minus');
@@ -229,8 +183,8 @@ $('[data-sync=boards]').on('click', updateBoards);
 $('[data-sync=cards]').on('click', updateCards);
 
 function updateBoards() {
-    $('[data-sync=boards]').attr('disabled', 'disabled');
-    boardsToUpdate = numTeams;
+    //$('[data-sync=boards]').attr('disabled', 'disabled');
+    //var to = setTimeout($('[data-sync=boards]').removeAttr('disabled'), 3000);
     FB.teams.on('child_added', function (snapshot) {
         updateDoneLists(snapshot.val().board, snapshot.key());
     });
@@ -284,20 +238,8 @@ function updateDoneLists(teamBoard, teamName) {
                 FB.iterations.child(list.endDate).update(iteration, fbCallback);
             }
         });
-        boardsToUpdate--;
-        if (boardsToUpdate === 0) {
-            console.log('all boards updated');
-            $('[data-sync=boards]').removeAttr('disabled');
-        }
     });
 }
-
-var fbCallback = function(error) {
-    if (error) {
-        alert(error);
-    }
-}
-
 
 function getCardData(doneList, teamName) {
 
