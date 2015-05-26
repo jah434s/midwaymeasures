@@ -88,7 +88,7 @@
                 var velocitySum = velocities.reduce(function (a, b) {
                     return a + b;
                 });
-                var velocityAvg = velocitySum / velocities.length;
+                var velocityAvg = (velocitySum / velocities.length).toFixed(2);
                 var velocityDisplay = $($('[data-template=result]').html().trim());
 
                 velocityDisplay.find('[data-team]').text('Team ' + teamName);

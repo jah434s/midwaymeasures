@@ -3,7 +3,7 @@
     webProdOrg: '504a56a70022d3d72e198e98'
 };
 
-var dataPointsToPlot = 9;
+var dataPointsToPlot = 10;
 
 var workTypes = ['CAP', 'DAP', 'OFI', 'CAR', 'SEO', 'BUG', 'Support'];
 
