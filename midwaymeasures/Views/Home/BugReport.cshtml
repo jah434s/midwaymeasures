@@ -1,6 +1,12 @@
 ﻿@{
     ViewBag.Title = "Bug Report";
 }
+
+<div class="alert alert-success hidden" data-bug-submit-success>
+    <a href="#" class="close" data-dismiss="alert">&times;</a>
+    <strong>Success!</strong> Bug Report submitted.
+</div>
+
 <h2>@ViewBag.Title</h2>
 
 <form data-bug="form">
@@ -60,6 +66,9 @@
                 if (error) {
                     alert(error);
                 } else {
+                    $('[data-bug-submit-success]').removeClass('hidden');
+                    $('[data-bug=form]')[0].reset();
+
                     //After the defect is added...
                     FB.defects.limitToLast(1).on('child_added', function (defect) {
                         //create defect reference
@@ -67,11 +76,8 @@
                         defectObj[defect.key()] = true;
 
                         //add defect reference to iteration
-                        FB.iterations.on('child_added', function (iteration) {
-                            if (defect.val().dateIntroduced < iteration.val().endDate) {
-                                FB.iterations.off('child_added');
-                                FB.iterations.child(iteration.val().endDate).child(defect.val().team).child('defects').update(defectObj, fbCallback);
-                            }
+                        FB.iterations.orderByChild('endDate').startAt(defect.val().dateIntroduced).limitToFirst(1).on('child_added', function (iteration) {
+                            FB.iterations.child(iteration.val().endDate).child(defect.val().team).child('defects').update(defectObj, fbCallback);
                         });
 
                         //add defect reference to person
