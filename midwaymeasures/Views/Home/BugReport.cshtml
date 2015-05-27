@@ -61,7 +61,7 @@
                     alert(error);
                 } else {
                     //After the defect is added...
-                    FB.defects.on('child_added', function (defect) {
+                    FB.defects.limitToLast(1).on('child_added', function (defect) {
                         //create defect reference
                         var defectObj = {};
                         defectObj[defect.key()] = true;
