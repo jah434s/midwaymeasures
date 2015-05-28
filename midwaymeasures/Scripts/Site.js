@@ -6,6 +6,7 @@
 var dataPointsToPlot = 10;
 
 var workTypes = ['CAP', 'DAP', 'OFI', 'CAR', 'SEO', 'BUG', 'Support'];
+var colors = ['rgba(6, 57, 81, 1)', 'rgba(193, 48, 24, 1)', 'rgba(243, 111, 19, 1)', 'rgba(235, 203, 56, 1)', 'rgba(162, 185, 105, 1)', 'rgba(13, 149, 188, 1)', 'rgba(92, 167, 147, 1)'];
 
 var fbRootRef = new Firebase("https://midway-measures.firebaseio.com/");
 
@@ -87,7 +88,6 @@ function logIn() {
 }
 
 function makeChart(dataArray, container) {
-    var colors = ['rgba(151, 187, 205, 1)', 'rgba(186, 218, 85, 1)', 'rgba(220, 220, 220, 1)'];
     var labelsArray = [];
     for (var j = 0; j < dataPointsToPlot; j++) {
         labelsArray.push('Iteration ' + (j + 1));
@@ -116,6 +116,25 @@ function makeChart(dataArray, container) {
 
     var myLineChart = new Chart(ctx).Line(data);
     //$('[data-chart]').after(myLineChart.generateLegend());
+}
+
+function makePieChart(labelsArray, dataArray, container) {
+    var data =[];
+    for (var i = 0; i < dataArray.length; i++) {
+        data[i]= {
+            color: colors[i],
+            label: labelsArray[i],
+            value: dataArray[i]
+        }
+    }
+
+    var ctx = container.get(0).getContext("2d");
+    var options = {
+        legendTemplate: '<ul class=\"<%=name.toLowerCase()%>-legend\"><% for (var i=0; i<segments.length; i++){%><li><span style=\"background-color:<%=segments[i].fillColor%>\"></span><%if(segments[i].label){%><%=segments[i].label%> - <%= Math.round(segments[i].value / total * 100) %>%<%}%></li><%}%></ul>'
+    };
+
+    var myPieChart = new Chart(ctx).Pie(data, options);
+    container.after(myPieChart.generateLegend());
 }
 
 //function byTeam(el) {

@@ -210,3 +210,22 @@ h1, h2, h3 {
 .result-item-value {
     font-size: 5em;
 }
+
+
+//Pie Charts
+.pie-legend {
+    list-style-type: none;
+    display: inline-block;
+    vertical-align: top;
+    li {
+        margin-bottom: .5em;
+        font-size: 1.2em;
+    }
+    span {
+        display:inline-block;
+        width: 1em;
+        height: 1em;
+        vertical-align: middle;
+        margin-right: .5em;
+    }
+}

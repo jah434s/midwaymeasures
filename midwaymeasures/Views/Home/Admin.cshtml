@@ -73,6 +73,19 @@
     </li>
 </ul>
 
+<section class="row">
+    <div class="col-lg-12 result-section">
+        <h2>Work Type Distribution</h2>
+        <ul class="list-unstyled clearfix">
+            <li class="col-md-5 result-item" data-result-container>
+                <h3 data-team class="result-item-title">Web Production</h3>
+                @*<strong data-result class="result-item-value"></strong>*@
+                <canvas data-worktype-chart width="220" height="220"></canvas>
+            </li>
+        </ul>
+    </div>
+</section>
+
 <template data-template="person">
     <li data-admin-person class="admin-person-list-item">
         <a data-toggle="collapse" class="admin-person" data-person-name>
@@ -121,7 +134,7 @@
         //Get Teams from DB
         FB.teams.on('child_added', function (snapshot) {
             var team = snapshot.key();
-            $('[data-buck-teams], [data-team-list]').append('<option data-buck-team data-fb-field="team">' + team + '</option>')
+            $('[data-buck-teams], [data-team-list]').append('<option data-buck-team data-fb-field="team">' + team + '</option>');
         });
 
         //Get People from DB after teams
@@ -147,6 +160,21 @@
                 personDisplay.find('[data-status=' + person.status + ']').prop('checked', true);
                 $('[data-admin-people-list]').append(personDisplay);
             });
+        });
+
+        // This gets worktype distribution by effort
+        var effortsByWorkType = [];
+        FB.cards.on('child_added', function(snapshot) {
+            var card = snapshot.val();
+            var index = workTypes.indexOf(card.workType);
+            if (typeof effortsByWorkType[index] == 'undefined') effortsByWorkType[index] = 0;
+            if (typeof card.effort != 'undefined') {
+                effortsByWorkType[index] += parseFloat(card.effort);
+            } 
+        });
+
+        FB.cards.once('value', function() {
+            makePieChart(workTypes, effortsByWorkType, $('[data-worktype-chart]'));
         });
 
         //Handle Bullseye Buck form submission
