@@ -28,9 +28,9 @@
                     @*<li>@Html.ActionLink("Contact", "Contact", "Home")</li>*@
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
-                    <!--<li><a href="#">Register</a></li>-->
                     <li class="right-nav-item logged-in-content"><a href="#" data-logout>Log Out</a></li>
                     <li class="right-nav-item logged-out-content"><a href="#" data-login>Log In</a></li>
+                    <li class="right-nav-item logged-out-content"><a href="#" data-register>Register</a></li>
                 </ul>
             </div>
         </div>
@@ -70,7 +70,34 @@
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->
-    
+    <div class="modal fade" data-register-modal>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form data-register-form>
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Register</h4>
+                    </div>
+                    <div class="modal-body">
+
+                        <label>
+                            Email Address:
+                            <input type=email required data-register-email />
+                        </label>
+                        <label>
+                            Password:
+                            <input type=password required data-register-password />
+                        </label>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Register</button>
+                    </div>
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
 
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")

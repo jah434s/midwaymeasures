@@ -42,10 +42,21 @@ $(document).on('ready', function () {
         $('[data-login-modal]').modal('show');
     });
 
+    $('body').on('click.register', '[data-register]', function (e) {
+        e.preventDefault();
+        $('[data-register-modal]').modal('show');
+    });
+
     $('body').on('submit', '[data-login-form]', function (e) {
         e.preventDefault();
         logIn();
         $('[data-login-modal]').modal('hide');
+    });
+
+    $('body').on('submit', '[data-register-form]', function (e) {
+        e.preventDefault();
+        register();
+        $('[data-register-modal]').modal('hide');
     });
 
     $('body').on('click.logout', '[data-logout]', function (e) {
@@ -87,6 +98,42 @@ function logIn() {
     });
 }
 
+function register() {
+    var email = $('[data-register-email]').val();
+    var pass = $('[data-register-password]').val();
+    fbRootRef.createUser({
+        email: email,
+        password: pass
+    }, function (error, userData) {
+        if (error) {
+            switch (error.code) {
+                case "EMAIL_TAKEN":
+                    alert("The new user account cannot be created because the email is already in use.");
+                    break;
+                case "INVALID_EMAIL":
+                    alert("The specified email is not a valid email.");
+                    break;
+                default:
+                    alert("Error creating user:", error);
+            }
+        } else {
+            fbRootRef.authWithPassword({
+                'email': email,
+                'password': pass
+            }, function (err, authData) {
+                if (err) {
+                    alert("Login Failed: ", err);
+                } else {
+                    $('body').addClass('logged-in').removeClass('logged-out');
+                    if (isAdmin) {
+                        $('body').addClass('admin');
+                    }
+                }
+            });
+        }
+    });
+}
+
 function makeChart(dataArray, container) {
     var labelsArray = [];
     for (var j = 0; j < dataPointsToPlot; j++) {
@@ -119,9 +166,9 @@ function makeChart(dataArray, container) {
 }
 
 function makePieChart(labelsArray, dataArray, container) {
-    var data =[];
+    var data = [];
     for (var i = 0; i < dataArray.length; i++) {
-        data[i]= {
+        data[i] = {
             color: colors[i],
             label: labelsArray[i],
             value: dataArray[i]
@@ -252,7 +299,7 @@ function updateDoneLists(teamBoard, teamName) {
 
                 //create new iteration for new done lists
                 var iteration = {
-                    endDate : list.endDate
+                    endDate: list.endDate
                 }
                 FB.iterations.child(list.endDate).update(iteration, fbCallback);
             }
@@ -284,7 +331,7 @@ function getCardData(doneList, teamName) {
                         };
 
                         //add people references to card
-                        $.each(cardPeople, function(index, id) {
+                        $.each(cardPeople, function (index, id) {
                             card.people[id] = true;
                         });
 
@@ -327,7 +374,7 @@ function getCardData(doneList, teamName) {
                             }, fbCallback);
 
                             //add effort to iteration
-                            FB.doneLists.child(doneList).once('value', function(snapshot) {
+                            FB.doneLists.child(doneList).once('value', function (snapshot) {
                                 FB.iterations.child(snapshot.val().endDate).child(teamName).update({
                                     effort: listEffort
                                 }, fbCallback);
@@ -350,7 +397,7 @@ function getCardData(doneList, teamName) {
                 personalCard[cardId] = true;
 
                 //TODO: Add new people when they are encountered
-                FB.people.orderByChild('trelloId').equalTo(trelloId).on('child_added', function(snapshot) {
+                FB.people.orderByChild('trelloId').equalTo(trelloId).on('child_added', function (snapshot) {
                     FB.people.child(snapshot.key()).child('cards').update(personalCard, fbCallback);
                 });
             });

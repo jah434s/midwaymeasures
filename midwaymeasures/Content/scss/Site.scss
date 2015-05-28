@@ -96,8 +96,10 @@ h1, h2, h3 {
 }
 
 /*Login Form*/
-[data-login-modal] .modal-dialog {
-    width: 350px;
+[data-login-modal], [data-register-modal] {
+    .modal-dialog {
+        width: 350px;
+    }
 }
 
 /*BugReport*/
