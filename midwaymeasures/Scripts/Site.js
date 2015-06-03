@@ -330,12 +330,11 @@ function updateDoneLists(teamBoard, teamName) {
 }
 
 function getCardData(doneList, teamName) {
-    console.log(doneList);
+
     Trello.lists.get(doneList, { 'cards': 'open' }, function (list) {
 
         var cardsToUpdate = list.cards.length;
         var listEffort = 0;
-        console.log(list.cards);
 
         $.each(list.cards, function (index, currentCard) {
 
@@ -365,10 +364,6 @@ function getCardData(doneList, teamName) {
                             if (effort == '1/2') effort = .5;
                             card.effort = effort;
                             listEffort += parseFloat(effort);
-                        }
-                        if (doneList == '555f78b537263a0ade2857b0')
-                        {
-                            console.log(doneList, listEffort, cardName);
                         }
 
                         //Get work type from card name (DAP, OFI, etc.)
@@ -433,7 +428,7 @@ function getCardData(doneList, teamName) {
                                             getCardData(newList.listId, newList.team);
                                         } else {
                                             doneListIndex = 0;
-                                            console.log('done!');
+                                            $('[data-card-update-success]').removeClass('hidden');
                                         }
                                     }
                                 });
