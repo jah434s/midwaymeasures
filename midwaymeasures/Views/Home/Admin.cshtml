@@ -48,26 +48,6 @@
         <div class="collapse" id="manage-people">
             <div class="well people-container">
                 <ul data-admin-people-list class="list-unstyled"></ul>
-                <a data-toggle="collapse" href="#add-person-form" class="btn btn-default"><i class="glyphicon glyphicon-plus btn-icon"></i>Add a Team Member</a>
-                <form class="collapse well" id="add-person-form" data-fb-form data-fb-root="people" data-reset="true" data-collapse="true">
-                    <input type="hidden" data-name-child data-fb-child />
-                    <label>
-                        First Name
-                        <input type="text" data-fb-field="firstName" />
-                    </label>
-                    <label>
-                        Last Name
-                        <input type="text" data-fb-field="lastName" />
-                    </label>
-                    <label>
-                        Team
-                        <select data-team-list>
-                            <option></option>
-                        </select>
-                    </label>
-                    <input type="hidden" value="active" data-fb-field="status" />
-                    <button type="submit" class="btn btn-primary">Add Team Member</button>
-                </form>
             </div>
         </div>
     </li>
@@ -120,11 +100,6 @@
 @section scripts {
     <script>
 
-        $('#add-person-form [data-fb-field=firstName], #add-person-form [data-fb-field=lastName]').on('input', function() {
-            var child = $('#add-person-form [data-fb-field=firstName]').val().trim() + ' ' + $('#add-person-form [data-fb-field=lastName]').val().trim();
-            $('[data-name-child]').first().data('fb-child', child);
-        });
-
         $('[data-admin-list-item]').on('click', '[data-toggle=collapse]', function(e) {
             e.preventDefault();
             var target = $(e.target).attr('href');
@@ -147,12 +122,15 @@
                 personDisplay.find('[data-person-name]').append(name);
                 personDisplay.find('[data-toggle=collapse]').attr('href', '#' + nameId);
                 personDisplay.find('.collapse').attr('id', nameId);
-                $.each(teamNames, function(index, teamName) {
-                    var selected = person.team == teamName ? 'selected' : '';
-                    personDisplay.find('[data-team-list]').append('<option data-team-option ' + selected + '>' + teamName + '</option>');
+                
+                FB.users.orderByChild('fullName').equalTo(name).once('child_added', function(user) {
+                    $.each(teamNames, function (index, teamName) {
+                        var selected = user.val().team == teamName ? 'selected' : '';
+                        personDisplay.find('[data-team-list]').append('<option data-team-option ' + selected + '>' + teamName + '</option>');
+                    });
+                    personDisplay.find('[data-status=' + user.val().status + ']').prop('checked', true);
+                    $('[data-admin-people-list]').append(personDisplay);
                 });
-                personDisplay.find('[data-status=' + person.status + ']').prop('checked', true);
-                $('[data-admin-people-list]').append(personDisplay);
             });
         });
 
@@ -206,7 +184,7 @@
                 obj[personName] = null;
                 FB.names.update(obj, fbCallback);
             }
-            
+
             var $element = $('#' + personName.replace(/\s+/g, ''));
             FB.users.child($(this).data('userId')).update(person, function(error) {
                 if (error) {
@@ -215,33 +193,6 @@
                     $element.collapse('toggle');
                 }
             });
-        });
-
-        $('body').on('submit', '[data-fb-form]', function(e) {
-            e.preventDefault();
-            var obj = {};
-            $('[data-fb-field]').each(function() {
-                obj[$(this).data('fb-field')] = $(this).val();
-            });
-            var ref = fbRootRef.child($(this).data('fb-root'));
-            $(this).find('[data-fb-child]').each(function() {
-                ref = ref.child($(this).data('fb-child'));
-            });
-            var $form = $(this);
-            ref.update(obj, function(error) {
-                if (error) {
-                    alert('Error: ' + error);
-                } else {
-                    console.log($form);
-                    if ($form.data('reset')) {
-                        $form[0].reset();
-                    }
-                    if ($form.data('collapse')) {
-                        $form.collapse('toggle');
-                    }
-                }
-            });
-
         });
 
     </script>
