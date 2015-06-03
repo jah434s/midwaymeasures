@@ -49,7 +49,7 @@ $(document).on('ready', function () {
 
     $('body').on('submit', '[data-login-form]', function (e) {
         e.preventDefault();
-        logIn();
+        logIn($('[data-login-email]').val(), $('[data-login-password]').val());
         $('[data-login-modal]').modal('hide');
     });
 
@@ -82,18 +82,18 @@ function isAdmin() {
     });
 }
 
-function logIn() {
+function logIn(email, password) {
     fbRootRef.authWithPassword({
-        email: $('[data-login-email]').val(),
-        password: $('[data-login-password]').val()
+        email: email,
+        password: password
     }, function (error, authData) {
         if (error) {
             alert("Login Failed: ", error);
         } else {
             $('body').addClass('logged-in').removeClass('logged-out');
-            if (isAdmin) {
-                $('body').addClass('admin');
-            }
+            FB.people.orderByChild('email').equalTo(email).once('value', function(snapshot) {
+                //
+            });
         }
     });
 }
@@ -117,19 +117,7 @@ function register() {
                     alert("Error creating user:", error);
             }
         } else {
-            fbRootRef.authWithPassword({
-                'email': email,
-                'password': pass
-            }, function (err, authData) {
-                if (err) {
-                    alert("Login Failed: ", err);
-                } else {
-                    $('body').addClass('logged-in').removeClass('logged-out');
-                    if (isAdmin) {
-                        $('body').addClass('admin');
-                    }
-                }
-            });
+            logIn(email, pass);
         }
     });
 }
