@@ -79,7 +79,14 @@
                         <h4 class="modal-title">Register</h4>
                     </div>
                     <div class="modal-body">
-
+                        <label>
+                            First Name:
+                            <input type=text required data-register-fname />
+                        </label>
+                        <label>
+                            Last Name:
+                            <input type=text required data-register-lname />
+                        </label>
                         <label>
                             Email Address:
                             <input type=email required data-register-email />
@@ -87,6 +94,20 @@
                         <label>
                             Password:
                             <input type=password required data-register-password />
+                        </label>
+                        <label>
+                            Position:
+                            <select required data-register-position>
+                                <option></option>
+                                <option>Web Designer</option>
+                                <option>Web Developer</option>
+                            </select>
+                        </label>
+                        <label>
+                            Team:
+                            <select required data-team-list data-register-team>
+                                <option></option>
+                            </select>
                         </label>
 
                     </div>
