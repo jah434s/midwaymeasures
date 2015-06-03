@@ -28,7 +28,7 @@
                     </label>
                     <label>
                         Team
-                        <select data-buck-teams required>
+                        <select data-team-list required>
                             <option></option>
                         </select>
                     </label>
@@ -131,12 +131,6 @@
             $(target).collapse('toggle');
         });
 
-        //Get Teams from DB
-        FB.teams.on('child_added', function (snapshot) {
-            var team = snapshot.key();
-            $('[data-buck-teams], [data-team-list]').append('<option data-buck-team data-fb-field="team">' + team + '</option>');
-        });
-
         //Get People from DB after teams
         FB.teams.on('value', function (teams) {
             var teamNames = Object.keys(teams.val());
@@ -184,7 +178,7 @@
                 time: Date.parse($('[data-buck-date]').val()),
                 description: $('[data-buck-description]').val(),
                 person: $('[data-buck-person]:selected').val(),
-                team: $('[data-buck-team]:selected').val()
+                team: $(this).find('[data-team-list]').val()
             }
 
             FB.bucks.push(buck, function (error) {

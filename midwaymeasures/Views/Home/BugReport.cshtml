@@ -24,7 +24,7 @@
     </fieldset>
     <label>
         Team
-        <select data-bug="teams" required>
+        <select data-team-list required>
             <option></option>
         </select>
     </label>
@@ -40,12 +40,6 @@
             $('[data-bug="people"]').append('<label><input type=checkbox data-bug="person">' + name + '</label>');
         });
 
-        //Get Teams from DB
-        fbRootRef.child('teams').on('child_added', function (snapshot) {
-            var team = snapshot.key();
-            $('[data-bug="teams"]').append('<option data-bug="team">' + team + '</option>')
-        });
-
         //Handle form submission
         $('[data-bug=form]').on('submit', function (e) {
             e.preventDefault();
@@ -53,7 +47,7 @@
                 dateIntroduced: Date.parse($('[data-bug=date]').val()),
                 description: $('[data-bug=description]').val(),
                 people: {},
-                team: $('[data-bug=team]:selected').val()
+                team: $(this).find('[data-team-list]').val()
             }
 
             $('[data-bug=person]:checked').each(function (index, checkbox) {

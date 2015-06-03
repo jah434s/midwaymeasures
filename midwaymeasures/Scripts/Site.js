@@ -20,7 +20,8 @@ var FB = {
     doneLists: fbRootRef.child('doneLists'),
     iterations: fbRootRef.child('iterations'),
     defects: fbRootRef.child('defects'),
-    users: fbRootRef.child('users')
+    users: fbRootRef.child('users'),
+    name: fbRootRef.child('names')
 };
 
 $(document).on('ready', function () {
@@ -70,6 +71,12 @@ $(document).on('ready', function () {
         $(this).next('[data-edit-section]').toggleClass('is-visible');
     });
 
+    //Get Teams from DB
+    FB.teams.on('child_added', function (snapshot) {
+        var team = snapshot.key();
+        $('[data-team-list]').append('<option data-buck-team data-fb-field="team">' + team + '</option>');
+});
+
 });
 
 function loggedIn() {
@@ -91,18 +98,27 @@ function logIn(email, password) {
             alert("Login Failed: ", error);
         } else {
             $('body').addClass('logged-in').removeClass('logged-out');
-            FB.people.orderByChild('email').equalTo(email).once('value', function(snapshot) {
-                //
-            });
+            if (isAdmin) {
+                $('body').addClass('admin');
+            }
         }
     });
 }
 
 function register() {
-    var email = $('[data-register-email]').val();
+    var user = {
+        email: $('[data-register-email]').val(),
+        position: $('[data-register-position]').val(),
+        team: $('[data-register-team]').val(),
+        firstName: $('[data-register-fname]').val(),
+        lastName: $('[data-register-lname]').val(),
+        fullName: $('[data-register-fname]').val() + ' ' + $('[data-register-lname]').val(),
+        status: 'active'
+    }
     var pass = $('[data-register-password]').val();
+
     fbRootRef.createUser({
-        email: email,
+        email: user.email,
         password: pass
     }, function (error, userData) {
         if (error) {
@@ -117,7 +133,27 @@ function register() {
                     alert("Error creating user:", error);
             }
         } else {
-            logIn(email, pass);
+            fbRootRef.authWithPassword({
+                'email': user.email,
+                'password': pass
+            }, function (err, authData) {
+                if (err) {
+                    alert("Login Failed: ", err);
+                } else {
+                    $('body').addClass('logged-in').removeClass('logged-out');
+                    if (isAdmin) {
+                        $('body').addClass('admin');
+                    }
+                    //Create user record and name record in DB
+                    FB.users.child(fbRootRef.getAuth().uid).update(user, function () {
+                        var obj = {};
+                        obj[user.fullName] = fbRootRef.getAuth().uid;
+                        FB.names.update(obj);
+                    });
+
+                }
+            });
+
         }
     });
 }
