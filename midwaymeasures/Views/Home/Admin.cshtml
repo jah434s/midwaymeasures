@@ -120,34 +120,34 @@
 @section scripts {
     <script>
 
-        $('#add-person-form [data-fb-field=firstName], #add-person-form [data-fb-field=lastName]').on('input', function () {
+        $('#add-person-form [data-fb-field=firstName], #add-person-form [data-fb-field=lastName]').on('input', function() {
             var child = $('#add-person-form [data-fb-field=firstName]').val().trim() + ' ' + $('#add-person-form [data-fb-field=lastName]').val().trim();
             $('[data-name-child]').first().data('fb-child', child);
         });
 
-        $('[data-admin-list-item]').on('click', '[data-toggle=collapse]', function (e) {
+        $('[data-admin-list-item]').on('click', '[data-toggle=collapse]', function(e) {
             e.preventDefault();
             var target = $(e.target).attr('href');
             $(target).collapse('toggle');
         });
 
         //Get People from DB after teams
-        FB.teams.on('value', function (teams) {
+        FB.teams.on('value', function(teams) {
             var teamNames = Object.keys(teams.val());
 
-            FB.people.orderByChild('status').equalTo('active').on('child_added', function (snapshot) {
-                var person = snapshot.val();
-                var name = person.firstName + ' ' + person.lastName;
-                var nameId = person.firstName + person.lastName;
-                nameId = nameId.replace(/\s+/g, '');
+            FB.names.on('child_added', function(snapshot) {
+                var name = snapshot.key();
+                var nameId = name.replace(/\s+/g, '');
+                var userId = snapshot.val();
 
                 $('[data-buck-people]').append('<option data-buck-person>' + name + '</option>');
 
                 var personDisplay = $($('[data-template=person]').html().trim());
+                personDisplay.find('[data-person-form]').data('userId', userId);
                 personDisplay.find('[data-person-name]').append(name);
                 personDisplay.find('[data-toggle=collapse]').attr('href', '#' + nameId);
                 personDisplay.find('.collapse').attr('id', nameId);
-                $.each(teamNames, function (index, teamName) {
+                $.each(teamNames, function(index, teamName) {
                     var selected = person.team == teamName ? 'selected' : '';
                     personDisplay.find('[data-team-list]').append('<option data-team-option ' + selected + '>' + teamName + '</option>');
                 });
@@ -164,7 +164,7 @@
             if (typeof effortsByWorkType[index] == 'undefined') effortsByWorkType[index] = 0;
             if (typeof card.effort != 'undefined') {
                 effortsByWorkType[index] += parseFloat(card.effort);
-            } 
+            }
         });
 
         FB.cards.once('value', function() {
@@ -172,16 +172,16 @@
         });
 
         //Handle Bullseye Buck form submission
-        $('[data-buck-form]').on('submit', function (e) {
+        $('[data-buck-form]').on('submit', function(e) {
             e.preventDefault();
             var buck = {
                 time: Date.parse($('[data-buck-date]').val()),
                 description: $('[data-buck-description]').val(),
-                person: $('[data-buck-person]:selected').val(),
+                person: $('[data-buck-people]').val(),
                 team: $(this).find('[data-team-list]').val()
             }
 
-            FB.bucks.push(buck, function (error) {
+            FB.bucks.push(buck, function(error) {
                 if (error) {
                     alert('Buck not submitted: ' + error);
                 } else {
@@ -191,19 +191,24 @@
         });
 
         //Handle update team member form submission
-        $('[data-admin-people-list]').on('submit', '[data-person-form]', function (e) {
+        $('[data-admin-people-list]').on('submit', '[data-person-form]', function(e) {
             e.preventDefault();
             var person = {
                 status: $(this).find('[data-status]:checked').data('status'),
                 team: $(this).find('[data-team-option]:selected').val()
             }
-            if (person.status == 'inactive') {
-                person.team = null;
-            }
-
             var personName = $(this).prev('[data-person-name]').text().trim();
+            if (person.status == 'inactive') {
+                //remove team from user record
+                person.team = null;
+                //remove name/userid from names list
+                var obj = {};
+                obj[personName] = null;
+                FB.names.update(obj, fbCallback);
+            }
+            
             var $element = $('#' + personName.replace(/\s+/g, ''));
-            FB.people.child(personName).update(person, function (error) {
+            FB.users.child($(this).data('userId')).update(person, function(error) {
                 if (error) {
                     alert('Error: ' + error);
                 } else {
@@ -212,18 +217,18 @@
             });
         });
 
-        $('body').on('submit', '[data-fb-form]', function (e) {
+        $('body').on('submit', '[data-fb-form]', function(e) {
             e.preventDefault();
             var obj = {};
-            $('[data-fb-field]').each(function () {
+            $('[data-fb-field]').each(function() {
                 obj[$(this).data('fb-field')] = $(this).val();
             });
             var ref = fbRootRef.child($(this).data('fb-root'));
-            $(this).find('[data-fb-child]').each(function () {
+            $(this).find('[data-fb-child]').each(function() {
                 ref = ref.child($(this).data('fb-child'));
             });
             var $form = $(this);
-            ref.update(obj, function (error) {
+            ref.update(obj, function(error) {
                 if (error) {
                     alert('Error: ' + error);
                 } else {

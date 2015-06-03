@@ -21,7 +21,7 @@ var FB = {
     iterations: fbRootRef.child('iterations'),
     defects: fbRootRef.child('defects'),
     users: fbRootRef.child('users'),
-    name: fbRootRef.child('names')
+    names: fbRootRef.child('names')
 };
 
 $(document).on('ready', function () {
@@ -421,8 +421,8 @@ function getCardData(doneList, teamName) {
                 personalCard[cardId] = true;
 
                 //TODO: Add new people when they are encountered
-                FB.people.orderByChild('trelloId').equalTo(trelloId).on('child_added', function (snapshot) {
-                    FB.people.child(snapshot.key()).child('cards').update(personalCard, fbCallback);
+                FB.users.orderByChild('trelloId').equalTo(trelloId).on('child_added', function (snapshot) {
+                    FB.users.child(snapshot.key()).child('cards').update(personalCard, fbCallback);
                 });
             });
         });
