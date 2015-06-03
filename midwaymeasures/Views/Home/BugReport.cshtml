@@ -34,9 +34,8 @@
 @section scripts {
     <script>
         //Get People from DB
-        fbRootRef.child('people').orderByChild('status').equalTo('active').on('child_added', function(snapshot) {
-            var person = snapshot.val();
-            var name = person.firstName + ' ' + person.lastName;
+        FB.names.on('child_added', function(snapshot) {
+            var name = snapshot.key();
             $('[data-bug="people"]').append('<label><input type=checkbox data-bug="person">' + name + '</label>');
         });
 
@@ -49,7 +48,7 @@
                 people: {},
                 team: $(this).find('[data-team-list]').val()
             }
-
+            console.log(bug);
             $('[data-bug=person]:checked').each(function(index, checkbox) {
                 var person = $(checkbox).parents('label').first().text();
                 bug.people[person] = true;
