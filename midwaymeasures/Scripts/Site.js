@@ -133,8 +133,11 @@ function logIn(email, password) {
         password: password
     }, function (error, authData) {
         if (error) {
-            alert("Login Failed: ", error);
+            $('[data-error-message]').text(error);
+            $('[data-error]').removeClass('hidden');
         } else {
+            $('[data-success-message]').text(error);
+            $('[data-success]').removeClass('hidden');
             $('body').addClass('logged-in').removeClass('logged-out');
             if (isAdmin) {
                 $('body').addClass('admin');
@@ -171,13 +174,16 @@ function register() {
         if (error) {
             switch (error.code) {
                 case "EMAIL_TAKEN":
-                    alert("The new user account cannot be created because the email is already in use.");
+                    $('[data-error-message]').text("This email is already in use.");
+                    $('[data-error]').removeClass('hidden');
                     break;
                 case "INVALID_EMAIL":
-                    alert("The specified email is not a valid email.");
+                    $('[data-error-message]').text("That is not a valid email.");
+                    $('[data-error]').removeClass('hidden');
                     break;
                 default:
-                    alert("Error creating user:", error);
+                    $('[data-error-message]').text(error);
+                    $('[data-error]').removeClass('hidden');
             }
         } else {
             fbRootRef.authWithPassword({
@@ -185,8 +191,11 @@ function register() {
                 'password': pass
             }, function (err, authData) {
                 if (err) {
-                    alert("Login Failed: ", err);
+                    $('[data-error-message]').text('Account was created, but you were unable to be logged in: ' + err);
+                    $('[data-error]').removeClass('hidden');
                 } else {
+                    $('[data-success-message]').text('Account created. You are now logged in.');
+                    $('[data-success]').removeClass('hidden');
                     $('body').addClass('logged-in').removeClass('logged-out');
                     if (isAdmin) {
                         $('body').addClass('admin');
