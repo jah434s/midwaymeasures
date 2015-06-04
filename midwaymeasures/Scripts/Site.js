@@ -78,6 +78,8 @@ $(document).on('ready', function () {
     $('body').on('click.logout', '[data-logout]', function (e) {
         e.preventDefault();
         fbRootRef.unauth();
+        $('[data-success-message]').text('You are logged out.');
+        $('[data-success]').removeClass('hidden');
         $('body').removeClass('logged-in').removeClass('admin').addClass('logged-out');
     });
 
@@ -136,7 +138,7 @@ function logIn(email, password) {
             $('[data-error-message]').text(error);
             $('[data-error]').removeClass('hidden');
         } else {
-            $('[data-success-message]').text(error);
+            $('[data-success-message]').text('You are logged in.');
             $('[data-success]').removeClass('hidden');
             $('body').addClass('logged-in').removeClass('logged-out');
             if (isAdmin) {

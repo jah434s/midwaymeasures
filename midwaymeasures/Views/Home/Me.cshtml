@@ -26,7 +26,7 @@
         $('[data-change-pass-form]').on('submit', function (e) {
             e.preventDefault();
             fbRootRef.changePassword({
-                email: me.email,
+                email: fbRootRef.getAuth().password.email,
                 oldPassword: $('[data-change-pass-old]').val(),
                 newPassword: $('[data-change-pass-new]').val()
             }, function (error) {

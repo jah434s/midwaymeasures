@@ -2,11 +2,6 @@
     ViewBag.Title = "Bug Report";
 }
 
-<div class="alert alert-success hidden" data-bug-submit-success>
-    <a href="#" class="close" data-dismiss="alert">&times;</a>
-    <strong>Success!</strong> Bug Report submitted.
-</div>
-
 <h2>@ViewBag.Title</h2>
 
 <form data-bug="form">
@@ -57,9 +52,11 @@
             //add defect to DB
             FB.defects.push(bug, function(error) {
                 if (error) {
-                    alert(error);
+                    $('[data-error-message]').text(error);
+                    $('[data-error]').removeClass('hidden');
                 } else {
-                    $('[data-bug-submit-success]').removeClass('hidden');
+                    $('[data-success-message]').text('Bug submitted.');
+                    $('[data-success]').removeClass('hidden');
                     $('[data-bug=form]')[0].reset();
 
                     //After the defect is added...

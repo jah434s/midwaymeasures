@@ -1,15 +1,12 @@
 ﻿@{
     ViewBag.Title = "Admin";
 }
-<div class="alert alert-success hidden" data-card-update-success>
-    <a href="#" class="close" data-dismiss="alert">&times;</a>
-    <strong>Success!</strong> Card data updated.
-</div>
+
 <h2>@ViewBag.Title</h2>
-<aside class="sync">
+<div class="row">
     <button type="button" class="btn btn-success sync-button" data-sync="boards"><i class="glyphicon glyphicon-refresh"></i>Sync Trello Boards</button>
     <button type="button" class="btn btn-success sync-button" data-sync="cards"><i class="glyphicon glyphicon-refresh"></i>Sync Trello Cards</button>
-</aside>
+</div>
 
 <ul data-admin-list class="admin-list list-unstyled clearfix">
     <li class="admin-list-item col-md-8">
@@ -164,8 +161,11 @@
 
             FB.bucks.push(buck, function(error) {
                 if (error) {
-                    alert('Buck not submitted: ' + error);
+                    $('[data-error-message]').text(error);
+                    $('[data-error]').removeClass('hidden');
                 } else {
+                    $('[data-success-message]').text('Bullseye Buck submitted.');
+                    $('[data-success]').removeClass('hidden');
                     $('[data-buck-form]')[0].reset();
                 }
             });
@@ -191,8 +191,11 @@
             var $element = $('#' + personName.replace(/\s+/g, ''));
             FB.users.child($(this).data('userId')).update(person, function(error) {
                 if (error) {
-                    alert('Error: ' + error);
+                    $('[data-error-message]').text(error);
+                    $('[data-error]').removeClass('hidden');
                 } else {
+                    $('[data-success-message]').text(personName + "'s information has been updated.");
+                    $('[data-success]').removeClass('hidden');
                     $element.collapse('toggle');
                 }
             });
