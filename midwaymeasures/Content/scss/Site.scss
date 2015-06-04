@@ -95,6 +95,14 @@ h1, h2, h3 {
     }
 }
 
+//header
+.navbar .glyphicon-user {
+    font-size: 1.3em;
+    margin-right: 0.4em;
+    vertical-align: top;
+    margin-top: -2px;
+}
+
 /*Login Form*/
 [data-login-modal], [data-register-modal] {
     .modal-dialog {

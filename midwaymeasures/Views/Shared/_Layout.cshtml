@@ -31,11 +31,20 @@
                     <li class="right-nav-item logged-in-content"><a href="#" data-logout>Log Out</a></li>
                     <li class="right-nav-item logged-out-content"><a href="#" data-login>Log In</a></li>
                     <li class="right-nav-item logged-out-content"><a href="#" data-register>Register</a></li>
+                    <li class="right-nav-item logged-in-content"><a href="/Me"><i class="glyphicon glyphicon-user"></i><span data-firstname></span></a></li>
                 </ul>
             </div>
         </div>
     </div>
     <div class="container body-content">
+        <div class="alert alert-success hidden" data-success>
+            <a href="#" class="close" data-dismiss="alert">&times;</a>
+            <strong>Success!</strong> <span data-success-message></span>
+        </div>
+        <div class="alert alert-danger hidden" data-error>
+            <a href="#" class="close" data-dismiss="alert">&times;</a>
+            <strong>Error: </strong> <span data-error-message></span>
+        </div>
         @RenderBody()
         <hr />
         <footer>
@@ -60,7 +69,7 @@
                             Password:
                             <input type=password required data-login-password/>
                         </label>
-
+                        <a href="#" data-reset-pass>Get temporary password.</a>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>

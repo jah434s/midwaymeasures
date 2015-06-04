@@ -1,0 +1,57 @@
+﻿@{
+    ViewBag.Title = "Me";
+}
+
+<h2 data-fullname></h2>
+<div class="row">
+    <div class="well col-md-3">
+        <h3>Change Password</h3>
+        <form data-change-pass-form>
+            <label>
+                Old/Temporary Password
+                <input type="password" data-change-pass-old required />
+            </label>
+            <label>
+                New Password
+                <input type="password" data-change-pass-new required />
+            </label>
+            <button type="submit" class="btn btn-primary">Change Password</button>
+        </form>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+
+        $('[data-change-pass-form]').on('submit', function (e) {
+            e.preventDefault();
+            fbRootRef.changePassword({
+                email: me.email,
+                oldPassword: $('[data-change-pass-old]').val(),
+                newPassword: $('[data-change-pass-new]').val()
+            }, function (error) {
+                if (error) {
+                    switch (error.code) {
+                        case "INVALID_PASSWORD":
+                            $('[data-error-message]').text("Old/Temporary password was incorrect.");
+                            $('[data-error]').removeClass('hidden');
+                            break;
+                        case "INVALID_USER":
+                            $('[data-error-message]').text("No account with that email exists");
+                            $('[data-error]').removeClass('hidden');
+                            break;
+                        default:
+                            $('[data-error-message]').text(error);
+                            $('[data-error]').removeClass('hidden');
+                    }
+                } else {
+                    $('[data-success-message]').text('Password changed.');
+                    $('[data-success]').removeClass('hidden');
+                    $('[data-change-pass-form]')[0].reset();
+                }
+
+            });
+        });
+
+    </script>
+}

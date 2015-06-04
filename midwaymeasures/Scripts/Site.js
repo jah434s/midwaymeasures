@@ -42,6 +42,7 @@ $(document).on('ready', function () {
 
     if (loggedIn()) {
         $('body').addClass('logged-in').removeClass('logged-out');
+        displayUserData();
         if (isAdmin) {
             $('body').addClass('admin');
             Trello.authorize({
@@ -80,6 +81,29 @@ $(document).on('ready', function () {
         $('body').removeClass('logged-in').removeClass('admin').addClass('logged-out');
     });
 
+    $('body').on('click.resetPass', '[data-reset-pass]', function(e) {
+        e.preventDefault();
+        $('[data-login-modal]').modal('hide');
+        fbRootRef.resetPassword({
+            email: $('[data-login-email]').val()
+        }, function (error) {
+            if (error) {
+                switch (error.code) {
+                    case "INVALID_USER":
+                        $('[data-error-message]').text('No account with that email exists');
+                        $('[data-error]').removeClass('hidden');
+                        break;
+                    default:
+                        $('[data-error-message]').text(error);
+                        $('[data-error]').removeClass('hidden');
+                }
+            } else {
+                $('[data-success-message]').text('An email has been sent to ' + $('[data-login-email]').val());
+                $('[data-success]').removeClass('hidden');
+            }
+        });
+    });
+
     $('[data-edit-toggle]').on('click', function () {
         $(this).toggleClass('is-open');
         $(this).next('[data-edit-section]').toggleClass('is-visible');
@@ -99,7 +123,7 @@ function loggedIn() {
 
 function isAdmin() {
     FB.users.child(authData.auth.uid).once('value', function (snapshot) {
-        return snapshot.val().isAdmin;
+        return snapshot.val().role == 'admin';
     });
 }
 
@@ -115,7 +139,16 @@ function logIn(email, password) {
             if (isAdmin) {
                 $('body').addClass('admin');
             }
+            displayUserData();
         }
+    });
+}
+
+function displayUserData() {
+    FB.users.child(fbRootRef.getAuth().uid).once('value', function (snapshot) {
+        var me = snapshot.val();
+        $('[data-firstname]').text(me.firstName);
+        $('[data-fullname]').text(me.fullName);
     });
 }
 
