@@ -35,7 +35,7 @@
     <script>
         var theTeams = {};
 
-        FB.teams.on('child_added', function (snapshot) {
+        FB.teams.on('child_added', function(snapshot) {
             var obj = {
                 name: snapshot.val().name,
                 effort: [],
@@ -46,9 +46,9 @@
             theTeams[obj.name] = obj;
         });
 
-        FB.teams.on('value', function () {
-            $.each(Object.keys(theTeams), function (index, team) {
-                FB.iterations.on('child_added', function (snapshot) {
+        FB.teams.on('value', function() {
+            $.each(Object.keys(theTeams), function(index, team) {
+                FB.iterations.on('child_added', function(snapshot) {
 
                     theTeams[team].effort.push(snapshot.val()[team].effort || 0);
 
@@ -72,7 +72,7 @@
                     });
 
                     var totalDefects = theTeams[team].defects;
-                    var defectsSum = totalDefects.reduce(function (a, b) {
+                    var defectsSum = totalDefects.reduce(function(a, b) {
                         return a + b;
                     });
 
@@ -82,10 +82,10 @@
             });
         });
 
-        FB.iterations.on('value', function () {
-            $.each(Object.keys(theTeams), function (index, teamName) {
+        FB.iterations.on('value', function() {
+            $.each(Object.keys(theTeams), function(index, teamName) {
                 var velocities = theTeams[teamName].effort;
-                var velocitySum = velocities.reduce(function (a, b) {
+                var velocitySum = velocities.reduce(function(a, b) {
                     return a + b;
                 });
                 var velocityAvg = (velocitySum / velocities.length).toFixed(2);
@@ -94,7 +94,6 @@
                 velocityDisplay.find('[data-team]').text('Team ' + teamName);
                 velocityDisplay.find('[data-result]').text(velocityAvg);
 
-                
 
                 var qualities = theTeams[teamName].quality;
                 var currentQuality = qualities[qualities.length - 1];
@@ -102,23 +101,21 @@
 
                 qualityDisplay.find('[data-team]').text('Team ' + teamName);
                 qualityDisplay.find('[data-result]').text(currentQuality + '%');
-                
+
 
                 $('[data-velocity-list]').append(velocityDisplay);
                 $('[data-quality-list]').append(qualityDisplay);
-                
+
                 var chartContainer = $('[data-velocity-list] [data-result-container]:last-child').find('[data-chart]');
-                makeChart([velocities], chartContainer);
+                makeChart([velocities], chartContainer, {});
                 chartContainer = $('[data-quality-list] [data-result-container]:last-child').find('[data-chart]');
-                makeChart([qualities], chartContainer);
+                makeChart([qualities], chartContainer, { scaleOverride: true, scaleSteps: 5, scaleStepWidth: 2, scaleStartValue: 87 });
 
             });
 
-            
 
         });
 
-        
 
     </script>
 }

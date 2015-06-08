@@ -27,17 +27,6 @@ var FB = {
     names: fbRootRef.child('names')
 };
 
-var testCard = {
-    dateCompleted: 1432844240301,
-    desc: 'test',
-    effort: "2",
-    team: "north",
-    people: {
-        "508982c2c9f0bea5630008bf": true,
-    },
-    workType: "BUG"
-}
-
 $(document).on('ready', function () {
 
     if (loggedIn()) {
@@ -216,7 +205,7 @@ function register() {
     });
 }
 
-function makeChart(dataArray, container) {
+function makeChart(dataArray, container, options) {
     var labelsArray = [];
     for (var j = 0; j < dataPointsToPlot; j++) {
         labelsArray.push('Iteration ' + (j + 1));
@@ -243,7 +232,7 @@ function makeChart(dataArray, container) {
 
     var ctx = container.get(0).getContext("2d");
 
-    var myLineChart = new Chart(ctx).Line(data);
+    var myLineChart = new Chart(ctx).Line(data, options);
     //$('[data-chart]').after(myLineChart.generateLegend());
 }
 
