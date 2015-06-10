@@ -1,68 +1,73 @@
 ﻿@{
     ViewBag.Title = "Admin";
 }
+<section class="row">
+    <h2 class="pull-left">@ViewBag.Title</h2>
 
-<h2>@ViewBag.Title</h2>
-<div class="row">
     <button type="button" class="btn btn-success sync-button" data-sync="boards"><i class="glyphicon glyphicon-refresh"></i>Sync Trello Boards</button>
     <button type="button" class="btn btn-success sync-button" data-sync="cards"><i class="glyphicon glyphicon-refresh"></i>Sync Trello Cards</button>
-</div>
-
-<ul data-admin-list class="admin-list list-unstyled clearfix">
-    <li class="admin-list-item col-md-8">
-        <a data-toggle="collapse" href="#add-buck" aria-expanded="false" aria-controls="add-buck" class="btn btn-default admin-nav">
-            <i class="glyphicon glyphicon-plus btn-icon"></i>Add a Bullseye Buck
-        </a>
-        <div class="collapse" id="add-buck">
-            <div class="well">
-                <form data-buck-form>
-                    <label>
-                        Team Member
-                        <select data-buck-people>
-                            <option></option>
-                        </select>
-                    </label>
-                    <label>
-                        Brief Description
-                        <textarea data-buck-description required></textarea>
-                    </label>
-                    <label>
-                        Team
-                        <select data-team-list required>
-                            <option></option>
-                        </select>
-                    </label>
-                    <label>
-                        Date
-                        <input type="date" data-buck-date required />
-                    </label>
-                    <button class="btn btn-primary" type="submit">Add Bullseye Buck</button>
-                </form>
+</section>
+<section class="row">
+    <ul data-admin-list class="admin-list list-unstyled clearfix">
+        <li class="admin-list-item col-md-8">
+            <a data-toggle="collapse" href="#add-buck" aria-expanded="false" aria-controls="add-buck" class="btn btn-default admin-nav">
+                <i class="glyphicon glyphicon-plus btn-icon"></i>Add a Bullseye Buck
+            </a>
+            <div class="collapse" id="add-buck">
+                <div class="well">
+                    <form data-buck-form>
+                        <label>
+                            Team Member
+                            <select data-buck-people>
+                                <option></option>
+                            </select>
+                        </label>
+                        <label>
+                            Brief Description
+                            <textarea data-buck-description required></textarea>
+                        </label>
+                        <label>
+                            Team
+                            <select data-team-list required>
+                                <option></option>
+                            </select>
+                        </label>
+                        <label>
+                            Date
+                            <input type="date" data-buck-date required />
+                        </label>
+                        <button class="btn btn-primary" type="submit">Add Bullseye Buck</button>
+                    </form>
+                </div>
             </div>
-        </div>
-    </li>
-    <li data-admin-list-item class="admin-list-item col-md-8">
-        <a data-toggle="collapse" href="#manage-people" aria-expanded="false" aria-controls="manage-people" class="btn btn-default admin-nav">
-            <i class="glyphicon glyphicon-plus btn-icon"></i>Team Members
-        </a>
-        <div class="collapse" id="manage-people">
-            <div class="well people-container">
-                <ul data-admin-people-list class="list-unstyled"></ul>
+        </li>
+        <li data-admin-list-item class="admin-list-item col-md-8">
+            <a data-toggle="collapse" href="#manage-people" aria-expanded="false" aria-controls="manage-people" class="btn btn-default admin-nav">
+                <i class="glyphicon glyphicon-plus btn-icon"></i>Team Members
+            </a>
+            <div class="collapse" id="manage-people">
+                <div class="well people-container">
+                    <ul data-admin-people-list class="list-unstyled"></ul>
+                </div>
             </div>
-        </div>
-    </li>
-</ul>
+        </li>
+    </ul>
+</section>
 
 <section class="row">
-    <div class="col-lg-12 result-section">
+    <div class="col-xs-5 result-section">
         <h2>Work Type Distribution</h2>
         <ul class="list-unstyled clearfix">
-            <li class="col-md-5 result-item" data-result-container>
+            <li class="result-item" data-result-container>
                 <h3 data-team class="result-item-title">Web Production</h3>
                 @*<strong data-result class="result-item-value"></strong>*@
                 <canvas data-worktype-chart width="220" height="220"></canvas>
             </li>
         </ul>
+    </div>
+    <div class="col-xs-4 result-section">
+        <h2>People Per Card</h2>
+        <dl data-people-per-card-list class="result-item"></dl>
     </div>
 </section>
 
@@ -100,17 +105,17 @@
 @section scripts {
     <script>
 
-        $('[data-admin-list-item]').on('click', '[data-toggle=collapse]', function(e) {
+        $('[data-admin-list-item]').on('click', '[data-toggle=collapse]', function (e) {
             e.preventDefault();
             var target = $(e.target).attr('href');
             $(target).collapse('toggle');
         });
 
         //Get People from DB after teams
-        FB.teams.on('value', function(teams) {
+        FB.teams.on('value', function (teams) {
             var teamNames = Object.keys(teams.val());
 
-            FB.names.on('child_added', function(snapshot) {
+            FB.names.on('child_added', function (snapshot) {
                 var name = snapshot.key();
                 var nameId = name.replace(/\s+/g, '');
                 var userId = snapshot.val();
@@ -122,8 +127,8 @@
                 personDisplay.find('[data-person-name]').append(name);
                 personDisplay.find('[data-toggle=collapse]').attr('href', '#' + nameId);
                 personDisplay.find('.collapse').attr('id', nameId);
-                
-                FB.users.orderByChild('fullName').equalTo(name).once('child_added', function(user) {
+
+                FB.users.orderByChild('fullName').equalTo(name).once('child_added', function (user) {
                     $.each(teamNames, function (index, teamName) {
                         var selected = user.val().team == teamName ? 'selected' : '';
                         personDisplay.find('[data-team-list]').append('<option data-team-option ' + selected + '>' + teamName + '</option>');
@@ -136,7 +141,7 @@
 
         // This gets worktype distribution by effort
         var effortsByWorkType = [];
-        FB.cards.on('child_added', function(snapshot) {
+        FB.cards.on('child_added', function (snapshot) {
             var card = snapshot.val();
             var index = workTypes.indexOf(card.workType);
             if (typeof effortsByWorkType[index] == 'undefined') effortsByWorkType[index] = 0;
@@ -145,12 +150,32 @@
             }
         });
 
-        FB.cards.once('value', function() {
+
+        FB.cards.once('value', function () {
             makePieChart(workTypes, effortsByWorkType, $('[data-worktype-chart]'));
         });
 
+        //Get average people per card for each team
+        FB.teams.on('child_added', function (team) {
+            var peoplePerCard = [];
+            FB.cards.orderByChild('team').equalTo(team.key()).on('value', function (cards) {
+                $.each(Object.keys(cards.val()), function (index, card) {
+                    var people = cards.val()[card].people;
+                    if (people) {
+                        peoplePerCard.push(Object.keys(cards.val()[card].people).length);
+                    } else {
+                        peoplePerCard.push(0);
+                    }
+                });
+                var totalPeople = peoplePerCard.reduce(function (a, b) {
+                    return a + b;
+                });
+                $('[data-people-per-card-list]').append('<dt><h3 class=result-item-title>' + team.key() + '</h3></dt><dd class=result-item-result>' + (totalPeople / peoplePerCard.length).toFixed(2) + '</dd>');
+            });
+        });
+
         //Handle Bullseye Buck form submission
-        $('[data-buck-form]').on('submit', function(e) {
+        $('[data-buck-form]').on('submit', function (e) {
             e.preventDefault();
             var buck = {
                 time: Date.parse($('[data-buck-date]').val()),
@@ -159,7 +184,7 @@
                 team: $(this).find('[data-team-list]').val()
             }
 
-            FB.bucks.push(buck, function(error) {
+            FB.bucks.push(buck, function (error) {
                 if (error) {
                     $('[data-error-message]').text(error);
                     $('[data-error]').removeClass('hidden');
@@ -172,7 +197,7 @@
         });
 
         //Handle update team member form submission
-        $('[data-admin-people-list]').on('submit', '[data-person-form]', function(e) {
+        $('[data-admin-people-list]').on('submit', '[data-person-form]', function (e) {
             e.preventDefault();
             var person = {
                 status: $(this).find('[data-status]:checked').data('status'),
@@ -189,7 +214,7 @@
             }
 
             var $element = $('#' + personName.replace(/\s+/g, ''));
-            FB.users.child($(this).data('userId')).update(person, function(error) {
+            FB.users.child($(this).data('userId')).update(person, function (error) {
                 if (error) {
                     $('[data-error-message]').text(error);
                     $('[data-error]').removeClass('hidden');
