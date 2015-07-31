@@ -14,10 +14,10 @@
         <h2>Bug Free Releases</h2>
         <ul data-quality-list class="list-unstyled"></ul>
     </div>
-    @*<div class="col-lg-12 result-section">
-        <h2>Consistency</h2>
-        <ul data-consistency-list class="list-unstyled"></ul>
-    </div>*@
+    <div class="col-lg-12 result-section">
+        <h2>Work Completed</h2>
+        <ul data-completed-list class="list-unstyled"></ul>
+    </div>
 </div>
 <div class="row">
     <canvas data-chart></canvas>
@@ -109,7 +109,7 @@
                 var chartContainer = $('[data-velocity-list] [data-result-container]:last-child').find('[data-chart]');
                 makeChart([velocities], chartContainer, {});
                 chartContainer = $('[data-quality-list] [data-result-container]:last-child').find('[data-chart]');
-                makeChart([qualities], chartContainer, { scaleOverride: true, scaleSteps: 5, scaleStepWidth: 2, scaleStartValue: 86 });
+                makeChart([qualities], chartContainer, {});
 
             });
 

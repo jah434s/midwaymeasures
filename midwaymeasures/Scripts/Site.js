@@ -3,7 +3,7 @@
     webProdOrg: '504a56a70022d3d72e198e98'
 };
 
-var dataPointsToPlot = 14;
+var dataPointsToPlot = 12;
 
 var workTypes = ['CAP', 'DAP', 'OFI', 'CAR', 'SEO', 'BUG', 'Support'];
 var colors = ['rgba(6, 57, 81, 1)', 'rgba(193, 48, 24, 1)', 'rgba(243, 111, 19, 1)', 'rgba(235, 203, 56, 1)', 'rgba(162, 185, 105, 1)', 'rgba(13, 149, 188, 1)', 'rgba(92, 167, 147, 1)'];
@@ -72,7 +72,7 @@ $(document).on('ready', function () {
         $('body').removeClass('logged-in').removeClass('admin').addClass('logged-out');
     });
 
-    $('body').on('click.resetPass', '[data-reset-pass]', function(e) {
+    $('body').on('click.resetPass', '[data-reset-pass]', function (e) {
         e.preventDefault();
         $('[data-login-modal]').modal('hide');
         fbRootRef.resetPassword({
@@ -104,7 +104,7 @@ $(document).on('ready', function () {
     FB.teams.on('child_added', function (snapshot) {
         var team = snapshot.key();
         $('[data-team-list]').append('<option data-buck-team data-fb-field="team">' + team + '</option>');
-});
+    });
 
 });
 
@@ -206,34 +206,50 @@ function register() {
 }
 
 function makeChart(dataArray, container, options) {
+
     var labelsArray = [];
-    for (var j = 0; j < dataPointsToPlot; j++) {
-        labelsArray.push('Iteration ' + (j + 1));
+
+    var makeDateLabels = function(snapshot) {
+        var date = new Date(parseInt(snapshot.key()));
+        var dateString = (date.getMonth() + 1) + '/' + date.getDate();
+        labelsArray.push(dateString);
     }
 
-    var chartInfo = [];
-    for (var i = 0; i < dataArray.length; i++) {
-        chartInfo[i] = {
-            label: 'team',
-            fillColor: colors[i].replace(', 1)', ', 0.2)'),
-            strokeColor: colors[i],
-            pointColor: colors[i],
-            pointStrokeColor: "#fff",
-            pointHighlightFill: "#fff",
-            pointHighlightStroke: colors[i],
-            data: dataArray[i]
+    FB.iterations.on('child_added', makeDateLabels);
+
+    FB.iterations.once('value', function () {
+        FB.iterations.off('child_added', makeDateLabels);
+
+        labelsArray = labelsArray.slice(Math.max(labelsArray.length - (dataPointsToPlot + 1), 1), (labelsArray.length - 1));
+
+        var chartInfo = [];
+        for (var i = 0; i < dataArray.length; i++) {
+            dataArray[i] = dataArray[i].slice(Math.max(dataArray[i].length - dataPointsToPlot, 1));
+            chartInfo[i] = {
+                label: 'team',
+                fillColor: colors[i].replace(', 1)', ', 0.2)'),
+                strokeColor: colors[i],
+                pointColor: colors[i],
+                pointStrokeColor: "#fff",
+                pointHighlightFill: "#fff",
+                pointHighlightStroke: colors[i],
+                data: dataArray[i]
+            }
         }
-    }
 
-    var data = {
-        labels: labelsArray,
-        datasets: chartInfo
-    };
+        console.log(chartInfo.length);
 
-    var ctx = container.get(0).getContext("2d");
+        var data = {
+            labels: labelsArray,
+            datasets: chartInfo
+        };
 
-    var myLineChart = new Chart(ctx).Line(data, options);
-    //$('[data-chart]').after(myLineChart.generateLegend());
+        var ctx = container.get(0).getContext("2d");
+
+        var myLineChart = new Chart(ctx).Line(data, options);
+        //$('[data-chart]').after(myLineChart.generateLegend());
+
+    });
 }
 
 function makePieChart(labelsArray, dataArray, container) {
@@ -311,7 +327,7 @@ function updateCards() {
         doneLists.push(obj);
         //getCardData(snapshot.key(), snapshot.val().team);
     });
-    FB.doneLists.once('value', function() {
+    FB.doneLists.once('value', function () {
         FB.doneLists.off('value', getDoneLists);
         var list = doneLists[doneListIndex];
         getCardData(list.listId, list.team);
@@ -337,8 +353,12 @@ function updateDoneLists(teamBoard, teamName) {
                 name: this.name,
                 id: this.id
             }
-            var dateString = this.name.substr(5);
+            var dateString = this.name.substr(5, 10);
             list.endDate = Date.parse(dateString);
+
+            if (this.name.indexOf('[') >= 0) {
+                list.effortPromised = parseFloat(this.name.substring((this.name.indexOf('[') + 1), this.name.indexOf(']')));
+            }
 
             //Start data collection from 2015
             var date = new Date(dateString);
@@ -357,6 +377,10 @@ function updateDoneLists(teamBoard, teamName) {
                     endDate: list.endDate
                 }
                 FB.iterations.child(list.endDate).update(iteration, fbCallback);
+
+                if (typeof list.effortPromised != 'undefined') {
+                    FB.iterations.child(list.endDate).child(teamName).update({ effortPromised: list.effortPromised });
+                }
             }
         });
     });
@@ -448,9 +472,14 @@ function getCardData(doneList, teamName) {
 
                             //add effort to iteration
                             FB.doneLists.child(doneList).once('value', function (snapshot) {
-                                FB.iterations.child(snapshot.val().endDate).child(teamName).update({
+                                var iterationObj = {
                                     effort: listEffort
-                                }, function(error) {
+                                }
+                                if (typeof snapshot.val().effortPromised != 'undefined') {
+                                    iterationObj.percentComplete = parseInt((listEffort / snapshot.val().effortPromised).toFixed(2) * 100);
+                                }
+
+                                FB.iterations.child(snapshot.val().endDate).child(teamName).update(iterationObj, function (error) {
                                     if (error) {
                                         alert(error);
                                     } else {
@@ -471,8 +500,10 @@ function getCardData(doneList, teamName) {
                         return false;
                     }
                 });
+
             });
         });
+
     });
 
 }
