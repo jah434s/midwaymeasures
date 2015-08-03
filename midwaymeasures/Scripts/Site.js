@@ -205,26 +205,17 @@ function register() {
     });
 }
 
-function makeChart(dataArray, container, options) {
-
-    var labelsArray = [];
-
-    var makeDateLabels = function(snapshot) {
-        var date = new Date(parseInt(snapshot.key()));
-        var dateString = (date.getMonth() + 1) + '/' + date.getDate();
-        labelsArray.push(dateString);
-    }
-
-    FB.iterations.on('child_added', makeDateLabels);
+function makeChart(dataArray, labels, container, options) {
 
     FB.iterations.once('value', function () {
-        FB.iterations.off('child_added', makeDateLabels);
 
-        labelsArray = labelsArray.slice(Math.max(labelsArray.length - (dataPointsToPlot + 1), 1), (labelsArray.length - 1));
 
         var chartInfo = [];
         for (var i = 0; i < dataArray.length; i++) {
-            dataArray[i] = dataArray[i].slice(Math.max(dataArray[i].length - dataPointsToPlot, 1));
+            if (dataArray[i].length > dataPointsToPlot) {
+                dataArray[i] = dataArray[i].slice(Math.max(dataArray[i].length - dataPointsToPlot, 1));
+                labels = labels.slice(Math.max(labels.length - dataPointsToPlot, 1));
+            }
             chartInfo[i] = {
                 label: 'team',
                 fillColor: colors[i].replace(', 1)', ', 0.2)'),
@@ -237,10 +228,8 @@ function makeChart(dataArray, container, options) {
             }
         }
 
-        console.log(chartInfo.length);
-
         var data = {
-            labels: labelsArray,
+            labels: labels,
             datasets: chartInfo
         };
 

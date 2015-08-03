@@ -41,7 +41,11 @@
                 effort: [],
                 cards: [],
                 defects: [],
-                quality: []
+                quality: [],
+                complete: [],
+                qualityLabels: [],
+                completeLabels: [],
+                velocityLabels: []
             };
             theTeams[obj.name] = obj;
         });
@@ -50,39 +54,53 @@
             $.each(Object.keys(theTeams), function(index, team) {
                 FB.iterations.on('child_added', function(snapshot) {
 
-                    theTeams[team].effort.push(snapshot.val()[team].effort || 0);
+                    var date = new Date(parseInt(snapshot.key()));
 
-                    var cards = snapshot.val()[team].cards || 0;
-                    if (cards) {
-                        theTeams[team].cards.push(Object.keys(snapshot.val()[team].cards).length);
-                    } else {
-                        theTeams[team].cards.push(0);
+                    if (date < new Date()) {
+                        var dateString = (date.getMonth() + 1) + '/' + date.getDate();
+
+                        if (snapshot.val()[team].effort) {
+                            theTeams[team].effort.push(snapshot.val()[team].effort);
+                            theTeams[team].velocityLabels.push(dateString);
+                        }
+                        if (snapshot.val()[team].percentComplete) {
+                            theTeams[team].complete.push(snapshot.val()[team].percentComplete);
+                            theTeams[team].completeLabels.push(dateString);
+                        }
+
+                        var cards = snapshot.val()[team].cards;
+                        if (cards) {
+                            theTeams[team].cards.push(Object.keys(snapshot.val()[team].cards).length);
+                        } else {
+                            theTeams[team].cards.push(0);
+                        }
+
+                        var defects = snapshot.val()[team].defects;
+                        if (defects) {
+                            theTeams[team].defects.push(Object.keys(snapshot.val()[team].defects).length);
+                        } else {
+                            theTeams[team].defects.push(0);
+                        }
+
+                        var totalCards = theTeams[team].cards;
+                        var cardsSum = totalCards.reduce(function(a, b) {
+                            return a + b;
+                        });
+
+                        var totalDefects = theTeams[team].defects;
+                        var defectsSum = totalDefects.reduce(function(a, b) {
+                            return a + b;
+                        });
+
+                        theTeams[team].quality.push(100 - ((defectsSum / cardsSum).toFixed(2) * 100));
+                        theTeams[team].qualityLabels.push(dateString);
                     }
-
-                    var defects = snapshot.val()[team].defects || 0;
-                    if (defects) {
-                        theTeams[team].defects.push(Object.keys(snapshot.val()[team].defects).length);
-                    } else {
-                        theTeams[team].defects.push(0);
-                    }
-
-                    var totalCards = theTeams[team].cards;
-                    var cardsSum = totalCards.reduce(function(a, b) {
-                        return a + b;
-                    });
-
-                    var totalDefects = theTeams[team].defects;
-                    var defectsSum = totalDefects.reduce(function(a, b) {
-                        return a + b;
-                    });
-
-                    theTeams[team].quality.push(100 - ((defectsSum / cardsSum).toFixed(2) * 100));
-
                 });
             });
         });
 
         FB.iterations.on('value', function() {
+
             $.each(Object.keys(theTeams), function(index, teamName) {
                 var velocities = theTeams[teamName].effort;
                 var velocitySum = velocities.reduce(function(a, b) {
@@ -94,7 +112,6 @@
                 velocityDisplay.find('[data-team]').text('Team ' + teamName);
                 velocityDisplay.find('[data-result]').text(velocityAvg);
 
-
                 var qualities = theTeams[teamName].quality;
                 var currentQuality = qualities[qualities.length - 1];
                 var qualityDisplay = $($('[data-template=result]').html().trim());
@@ -102,14 +119,26 @@
                 qualityDisplay.find('[data-team]').text('Team ' + teamName);
                 qualityDisplay.find('[data-result]').text(currentQuality + '%');
 
+                var completes = theTeams[teamName].complete;
+                var completedDisplay = $($('[data-template=result]').html().trim());
+                var completedSum = theTeams[teamName].complete.reduce(function(a, b) {
+                    return a + b;
+                });
+                var completedAverage = Math.round(completedSum / theTeams[teamName].complete.length);
+
+                completedDisplay.find('[data-team]').text('Team ' + teamName);
+                completedDisplay.find('[data-result]').text(completedAverage + '%');
 
                 $('[data-velocity-list]').append(velocityDisplay);
                 $('[data-quality-list]').append(qualityDisplay);
+                $('[data-completed-list]').append(completedDisplay);
 
                 var chartContainer = $('[data-velocity-list] [data-result-container]:last-child').find('[data-chart]');
-                makeChart([velocities], chartContainer, {});
+                makeChart([velocities], theTeams[teamName].velocityLabels, chartContainer, {});
                 chartContainer = $('[data-quality-list] [data-result-container]:last-child').find('[data-chart]');
-                makeChart([qualities], chartContainer, {});
+                makeChart([qualities], theTeams[teamName].qualityLabels, chartContainer, {});
+                chartContainer = $('[data-completed-list] [data-result-container]:last-child').find('[data-chart]');
+                makeChart([completes], theTeams[teamName].completeLabels, chartContainer, {});
 
             });
 
