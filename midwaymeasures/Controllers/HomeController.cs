@@ -28,6 +28,16 @@ namespace midwaymeasures.Controllers
             return View();
         }
 
+        public ActionResult SyncBoards()
+        {
+            return View();
+        }
+
+        public ActionResult SyncCards()
+        {
+            return View();
+        }
+
         public ActionResult Contact()
         {
             ViewBag.Message = "Your contact page.";

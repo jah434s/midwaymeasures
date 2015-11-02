@@ -243,6 +243,8 @@
     <Content Include="Scripts\jquery-1.10.2.min.map" />
     <Content Include="Views\Home\Admin.cshtml" />
     <Content Include="Views\Home\Me.cshtml" />
+    <Content Include="Views\Home\SyncBoards.cshtml" />
+    <Content Include="Views\Home\SyncCards.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

@@ -4,7 +4,10 @@
 
 
 <h1>Web Production Measures</h1>
-
+<div class="row" data-current-progress>
+    <h2>Current Iteration Progress</h2>
+</div>
+<hr />
 <div class="row">
     <div class="col-lg-12 result-section">
         <h2>Average Velocity</h2>
@@ -45,7 +48,8 @@
                 complete: [],
                 qualityLabels: [],
                 completeLabels: [],
-                velocityLabels: []
+                velocityLabels: [],
+                progress: '0%'
             };
             theTeams[obj.name] = obj;
         });
@@ -94,6 +98,9 @@
 
                         theTeams[team].quality.push(100 - ((defectsSum / cardsSum).toFixed(2) * 100));
                         theTeams[team].qualityLabels.push(dateString);
+                    } else {
+                        //For current iteration
+                        $('[data-current-progress]').append('<div class=col-md-4><h3>Team ' + theTeams[team].name + ': <b>' + snapshot.val()[team].percentComplete + '%</b></h3></div>');
                     }
                 });
             });
