@@ -299,6 +299,15 @@ $('[data-sync=boards]').on('click', updateBoards);
 
 $('[data-sync=cards]').on('click', updateCards);
 
+
+//update cards every 30 mins.
+var cardSchedule = later.parse.text('every 30 mins');
+later.setInterval(updateCards, cardSchedule);
+
+//update boards every day
+var boardSchedule = later.parse.cron('00 7 * * ? *');
+later.setInterval(updateBoards, boardSchedule);
+
 function updateBoards() {
     //$('[data-sync=boards]').attr('disabled', 'disabled');
     //var to = setTimeout($('[data-sync=boards]').removeAttr('disabled'), 3000);
