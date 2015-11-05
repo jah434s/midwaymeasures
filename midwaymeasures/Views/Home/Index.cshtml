@@ -106,7 +106,13 @@
             });
         });
 
-        FB.iterations.on('value', function() {
+        FB.iterations.on('value', function(snapshot) {
+
+            var date = new Date(parseInt(snapshot.key()));
+
+            if (date > new Date()) {
+
+            }
 
             $.each(Object.keys(theTeams), function(index, teamName) {
                 var velocities = theTeams[teamName].effort;
