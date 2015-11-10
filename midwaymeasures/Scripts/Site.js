@@ -342,31 +342,32 @@ $('[data-toggle=collapse]').on('click', function () {
     $(this).find('i').first().toggleClass('glyphicon-plus').toggleClass('glyphicon-minus');
 });
 
-$('[data-sync=boards]').on('click', updateBoards);
+//$('[data-sync=boards]').on('click', updateBoards);
 
 $('[data-sync=cards]').on('click', updateCards);
 
 
 //update cards every 30 mins.
-var cardSchedule = later.parse.text('every 30 mins');
-later.setInterval(updateCards, cardSchedule);
+//var cardSchedule = later.parse.text('every 30 mins');
+//later.setInterval(updateCards, cardSchedule);
 
 //update boards every day
-var boardSchedule = later.parse.cron('00 7 * * ? *');
-later.setInterval(updateBoards, boardSchedule);
+//var boardSchedule = later.parse.cron('00 7 * * ? *');
+//later.setInterval(updateBoards, boardSchedule);
 
-function updateBoards() {
-    //$('[data-sync=boards]').attr('disabled', 'disabled');
-    //var to = setTimeout($('[data-sync=boards]').removeAttr('disabled'), 3000);
-    FB.teams.on('child_added', function (snapshot) {
-        updateDoneLists(snapshot.val().board, snapshot.key());
-    });
-}
+//function updateBoards() {
+//    //$('[data-sync=boards]').attr('disabled', 'disabled');
+//    //var to = setTimeout($('[data-sync=boards]').removeAttr('disabled'), 3000);
+//    FB.teams.on('child_added', function (snapshot) {
+//        updateDoneLists(snapshot.val().board, snapshot.key());
+//    });
+//}
 
 function updateCards() {
+    
+    var boards = {}
 
     var updateData = {
-        boards: {},
         doneLists: {},
         cards: {},
         iterations: {}
@@ -379,15 +380,14 @@ function updateCards() {
         //Add board objects to updateData
         Object.keys(teams).forEach(function (key) {
             var boardId = teams[key].board;
-            updateData.boards[boardId] = new Board(boardId, key);
+            boards[boardId] = new Board(boardId, key);
         });
 
         //Get open lists from boards
         var boardRequests = [];
-        Object.keys(updateData.boards).forEach(function (key) {
-            var boards = updateData.boards;
-            boardRequests.push($.ajax('https://api.trello.com/1/boards/' + key + '?lists=open&list_fields=id,name,idBoard&cards=open&card_fields=id,name,idList,idBoard,idMembers&actions=updateCard:idList&' + TrelloData.credentials).done(function (boardData) {
+        Object.keys(boards).forEach(function (key) {
 
+            boardRequests.push($.ajax('https://api.trello.com/1/boards/' + key + '?lists=open&list_fields=id,name,idBoard&cards=open&card_fields=id,name,idList,idBoard,idMembers&actions=updateCard:idList&' + TrelloData.credentials).done(function (boardData) {
                 boardData.lists.forEach(function (list) {
                     var newList = new List(list.id, list.name, boards[list.idBoard].team, list.idBoard);
                     if (isDoneList(newList)) {
@@ -435,65 +435,12 @@ function updateCards() {
         });
 
         $.when.all(boardRequests).done(function () {
-            console.log(updateData);
+            console.log(boards, updateData);
+            //fbRootRef.update(updateData);
+            console.info('Updated!');
         });
 
     });
-
-
-    //var getDoneLists = FB.doneLists.orderByKey().limitToLast(doneListsToCheck).on('child_added', function (snapshot) {
-    //    doneLists[snapshot.key()] = {
-    //        'id': snapshot.key(),
-    //        'team': snapshot.val().team
-    //    }
-    //});
-    //FB.doneLists.once('value', function () {
-    //    FB.doneLists.off('child_added', getDoneLists);
-
-    //    var promises = [];
-
-    //    $(doneLists).each(function(index, list) {
-    //        promises.push( $.ajax('https://api.trello.com/1/lists/' + list.listId + '?fields=name&cards=open&card_fields=name,idMembers&key=' + TrelloData.appKey + '&token=' + Trello.token()));
-    //    });
-
-    //    $.when.all(promises).done(function (responses) {
-    //        var cards = {},
-    //            cardRequests = [];
-    //        $(responses).each(function () {
-    //            var list = this[0];
-    //            $(list.cards).each(function () {
-    //                //'actions': 'updateCard:idList'
-    //                // make this a regular ajax request??
-    //                cardRequests.push($.ajax('https://api.trello.com/1/cards/' + this.id + '/actions?key=' + TrelloData.appKey + '&token=' + Trello.token()).done(function(data) {
-    //                    var card = {
-    //                        dateCompleted: getDateCompleted(data.actions, list.id),
-    //                        desc: data.name,
-    //                        effort: getCardEffort(data.name),
-    //                        team: '???',
-    //                        workType: getWorkType(data.name)
-    //                    }
-    //                    console.log(card);
-    //                    cards.push(card);
-    //                }));
-
-    //            });
-
-    //        });
-    //        $.when.all(cardRequests).done(function (cardResponses) {
-    //            //$(cardResponses).each(function() {
-    //            //    var trelloCard = this[0];
-    //            //    var card = {
-    //            //        dateCompleted: getDateCompleted(data.actions, list.id),
-    //            //        desc: data.name,
-    //            //        effort: getCardEffort(data.name),
-    //            //        team: '???',
-    //            //        workType: getWorkType(data.name)
-    //            //    }
-    //            //});
-    //            console.log(cards);
-    //        });
-    //    });
-    //});
 }
 
 function getCardEffort(desc) {
@@ -578,176 +525,187 @@ function getFinishedCards(cards, doneLists) {
     return cards;
 }
 
-function updateDoneLists(teamBoard, teamName) {
-    Trello.boards.get(teamBoard, { 'lists': 'all' }, function (board) {
-        var boardDoneLists = [];
+//Update Average Velocity
+FB.iterations.on('value', function (snapshot) {
+    //get teams first
+    var iterations = snapshot.val();
+    console.log(iterations);
+});
 
-        //Grab all of the 'Done' lists
-        $(board.lists).each(function () {
-            if (this.name.indexOf('Done') >= 0) {
-                boardDoneLists.push(this);
-            }
-        });
-
-        $(boardDoneLists).each(function () {
-
-            //create list object
-            var list = {
-                team: teamName,
-                name: this.name,
-                id: this.id
-            }
-            var dateString = this.name.substr(5, 10);
-            list.endDate = Date.parse(dateString);
-
-            if (this.name.indexOf('[') >= 0) {
-                list.effortPromised = parseFloat(this.name.substring((this.name.indexOf('[') + 1), this.name.indexOf(']')));
-            }
-
-            //Start data collection from 2015
-            var date = new Date(dateString);
-            if (date.getFullYear() == 2015) {
-
-                //add reference to team object
-                var listObj = {};
-                listObj[this.id] = true;
-                FB.teams.child(teamName).child('doneLists').update(listObj, fbCallback);
-
-                //add done list to DB
-                FB.doneLists.child(list.id).update(list, fbCallback);
-
-                //create new iteration for new done lists
-                var iteration = {
-                    endDate: list.endDate
-                }
-                FB.iterations.child(list.endDate).update(iteration, fbCallback);
-
-                if (typeof list.effortPromised != 'undefined') {
-                    FB.iterations.child(list.endDate).child(teamName).update({ effortPromised: list.effortPromised });
-                }
-            }
-        });
-    });
+function averageVelocity(team) {
+    FB.iterations.child(team).on(v)
 }
 
-function getCardData(doneList, teamName) {
+//function updateDoneLists(teamBoard, teamName) {
+//    Trello.boards.get(teamBoard, { 'lists': 'all' }, function (board) {
+//        var boardDoneLists = [];
 
-    Trello.lists.get(doneList, { 'cards': 'open' }, function (list) {
+//        //Grab all of the 'Done' lists
+//        $(board.lists).each(function () {
+//            if (this.name.indexOf('Done') >= 0) {
+//                boardDoneLists.push(this);
+//            }
+//        });
 
-        var cardsToUpdate = list.cards.length;
-        var listEffort = 0;
+//        $(boardDoneLists).each(function () {
 
-        $.each(list.cards, function (index, currentCard) {
+//            //create list object
+//            var list = {
+//                team: teamName,
+//                name: this.name,
+//                id: this.id
+//            }
+//            var dateString = this.name.substr(5, 10);
+//            list.endDate = Date.parse(dateString);
 
-            var cardId = currentCard.id,
-                cardName = currentCard.name,
-                cardPeople = currentCard.idMembers;
+//            if (this.name.indexOf('[') >= 0) {
+//                list.effortPromised = parseFloat(this.name.substring((this.name.indexOf('[') + 1), this.name.indexOf(']')));
+//            }
 
-            Trello.cards.get(cardId, { 'actions': 'updateCard:idList' }, function (data) {
-                $(data.actions).each(function () {
-                    if (this.data.listAfter.id == doneList) {
-                        var card = {
-                            people: {},
-                            team: teamName,
-                            dateCompleted: Date.parse(this.date),
-                            desc: cardName
-                        };
+//            //Start data collection from 2015
+//            var date = new Date(dateString);
+//            if (date.getFullYear() == 2015) {
 
-                        //add people references to card
-                        $.each(cardPeople, function (index, id) {
-                            card.people[id] = true;
-                        });
+//                //add reference to team object
+//                var listObj = {};
+//                listObj[this.id] = true;
+//                FB.teams.child(teamName).child('doneLists').update(listObj, fbCallback);
 
-                        //get Effort from card name, e.g. '[5]'
-                        var matchesEffort = cardName.match(/\[(.*?)\]/);
-                        if (matchesEffort) {
-                            var effort = matchesEffort[1];
-                            if (effort == '1/2') effort = .5;
-                            card.effort = effort;
-                            listEffort += parseFloat(effort);
-                        }
+//                //add done list to DB
+//                FB.doneLists.child(list.id).update(list, fbCallback);
 
-                        //Get work type from card name (DAP, OFI, etc.)
-                        $(workTypes).each(function (index, value) {
-                            if (cardName.indexOf(value) >= 0) {
-                                card.workType = value;
-                            };
-                        });
-                        if (!card.workType) {
-                            card.workType = 'Other';
-                        }
+//                //create new iteration for new done lists
+//                var iteration = {
+//                    endDate: list.endDate
+//                }
+//                FB.iterations.child(list.endDate).update(iteration, fbCallback);
 
-                        //Add Card to DB
-                        var cardRef = FB.cards.child(cardId);
-                        cardRef.set(card, function () { });
+//                if (typeof list.effortPromised != 'undefined') {
+//                    FB.iterations.child(list.endDate).child(teamName).update({ effortPromised: list.effortPromised });
+//                }
+//            }
+//        });
+//    });
+//}
 
-                        //Add card reference to iteration
-                        var cardObj = {};
-                        cardObj[cardId] = true;
-                        FB.doneLists.child(doneList).once('value', function (snapshot) {
-                            FB.iterations.child(snapshot.val().endDate).child(teamName).child('cards').update(cardObj, fbCallback);
-                        });
+//function getCardData(doneList, teamName) {
 
-                        //Add Card reference to team
-                        var teamCardsRef = FB.teams.child(teamName).child('cards');
-                        var teamCard = {};
-                        teamCard[cardId] = true;
-                        teamCardsRef.update(teamCard, fbCallback);
+//    Trello.lists.get(doneList, { 'cards': 'open' }, function (list) {
 
-                        //Add Card reference to person
-                        $(this.idMembers).each(function () {
-                            var trelloId = this.toString();
-                            var personalCard = {};
-                            personalCard[cardId] = true;
+//        var cardsToUpdate = list.cards.length;
+//        var listEffort = 0;
 
-                            //TODO: Add new people when they are encountered
-                            FB.users.orderByChild('trelloId').equalTo(trelloId).on('child_added', function (snapshot) {
-                                FB.users.child(snapshot.key()).child('cards').update(personalCard, fbCallback);
-                            });
-                        });
+//        $.each(list.cards, function (index, currentCard) {
 
-                        cardsToUpdate--;
-                        if (cardsToUpdate == 0) { //all cards on the list have been checked
+//            var cardId = currentCard.id,
+//                cardName = currentCard.name,
+//                cardPeople = currentCard.idMembers;
 
-                            //add effort to donelist
-                            FB.doneLists.child(doneList).update({
-                                effort: listEffort
-                            }, fbCallback);
+//            Trello.cards.get(cardId, { 'actions': 'updateCard:idList' }, function (data) {
+//                $(data.actions).each(function () {
+//                    if (this.data.listAfter.id == doneList) {
+//                        var card = {
+//                            people: {},
+//                            team: teamName,
+//                            dateCompleted: Date.parse(this.date),
+//                            desc: cardName
+//                        };
 
-                            //add effort to iteration
-                            FB.doneLists.child(doneList).once('value', function (snapshot) {
-                                var iterationObj = {
-                                    effort: listEffort
-                                }
-                                if (typeof snapshot.val().effortPromised != 'undefined') {
-                                    iterationObj.percentComplete = parseInt((listEffort / snapshot.val().effortPromised).toFixed(2) * 100);
-                                }
+//                        //add people references to card
+//                        $.each(cardPeople, function (index, id) {
+//                            card.people[id] = true;
+//                        });
 
-                                FB.iterations.child(snapshot.val().endDate).child(teamName).update(iterationObj, function (error) {
-                                    if (error) {
-                                        alert(error);
-                                    } else {
-                                        //move on to the next list, if necessary
-                                        doneListIndex++;
-                                        if (doneListIndex < doneListsToCheck) {
-                                            var newList = doneLists[doneListIndex];
-                                            getCardData(newList.listId, newList.team);
-                                        } else {
-                                            doneListIndex = 0;
-                                            $('[data-card-update-success]').removeClass('hidden');
-                                        }
-                                    }
-                                });
-                            });
-                        }
-                        //stop looping through actions if we've already got a date
-                        return false;
-                    }
-                });
+//                        //get Effort from card name, e.g. '[5]'
+//                        var matchesEffort = cardName.match(/\[(.*?)\]/);
+//                        if (matchesEffort) {
+//                            var effort = matchesEffort[1];
+//                            if (effort == '1/2') effort = .5;
+//                            card.effort = effort;
+//                            listEffort += parseFloat(effort);
+//                        }
 
-            });
-        });
+//                        //Get work type from card name (DAP, OFI, etc.)
+//                        $(workTypes).each(function (index, value) {
+//                            if (cardName.indexOf(value) >= 0) {
+//                                card.workType = value;
+//                            };
+//                        });
+//                        if (!card.workType) {
+//                            card.workType = 'Other';
+//                        }
 
-    });
+//                        //Add Card to DB
+//                        var cardRef = FB.cards.child(cardId);
+//                        cardRef.set(card, function () { });
 
-}
+//                        //Add card reference to iteration
+//                        var cardObj = {};
+//                        cardObj[cardId] = true;
+//                        FB.doneLists.child(doneList).once('value', function (snapshot) {
+//                            FB.iterations.child(snapshot.val().endDate).child(teamName).child('cards').update(cardObj, fbCallback);
+//                        });
+
+//                        //Add Card reference to team
+//                        var teamCardsRef = FB.teams.child(teamName).child('cards');
+//                        var teamCard = {};
+//                        teamCard[cardId] = true;
+//                        teamCardsRef.update(teamCard, fbCallback);
+
+//                        //Add Card reference to person
+//                        $(this.idMembers).each(function () {
+//                            var trelloId = this.toString();
+//                            var personalCard = {};
+//                            personalCard[cardId] = true;
+
+//                            //TODO: Add new people when they are encountered
+//                            FB.users.orderByChild('trelloId').equalTo(trelloId).on('child_added', function (snapshot) {
+//                                FB.users.child(snapshot.key()).child('cards').update(personalCard, fbCallback);
+//                            });
+//                        });
+
+//                        cardsToUpdate--;
+//                        if (cardsToUpdate == 0) { //all cards on the list have been checked
+
+//                            //add effort to donelist
+//                            FB.doneLists.child(doneList).update({
+//                                effort: listEffort
+//                            }, fbCallback);
+
+//                            //add effort to iteration
+//                            FB.doneLists.child(doneList).once('value', function (snapshot) {
+//                                var iterationObj = {
+//                                    effort: listEffort
+//                                }
+//                                if (typeof snapshot.val().effortPromised != 'undefined') {
+//                                    iterationObj.percentComplete = parseInt((listEffort / snapshot.val().effortPromised).toFixed(2) * 100);
+//                                }
+
+//                                FB.iterations.child(snapshot.val().endDate).child(teamName).update(iterationObj, function (error) {
+//                                    if (error) {
+//                                        alert(error);
+//                                    } else {
+//                                        //move on to the next list, if necessary
+//                                        doneListIndex++;
+//                                        if (doneListIndex < doneListsToCheck) {
+//                                            var newList = doneLists[doneListIndex];
+//                                            getCardData(newList.listId, newList.team);
+//                                        } else {
+//                                            doneListIndex = 0;
+//                                            $('[data-card-update-success]').removeClass('hidden');
+//                                        }
+//                                    }
+//                                });
+//                            });
+//                        }
+//                        //stop looping through actions if we've already got a date
+//                        return false;
+//                    }
+//                });
+
+//            });
+//        });
+
+//    });
+
+//}
