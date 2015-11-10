@@ -5,159 +5,160 @@
 
 <h1>Web Production Measures</h1>
 <div class="row" data-current-progress>
-    <h2>Current Iteration Progress</h2>
+    <h2 class="col-xs-12">Current Iteration Progress</h2>
+    <div class=col-md-4 ng-repeat ="team in teams"> <h3>Team {{ team.name }}: <b>{{ display[team.name].currentProgress }}%</b></h3></div>
 </div>
 <hr />
-<div class="row">
-    <div class="col-lg-12 result-section">
-        <h2>Average Velocity</h2>
-        <ul data-velocity-list class="list-unstyled"></ul>
+@*<div class="row">
+        <div class="col-lg-12 result-section">
+            <h2>Average Velocity</h2>
+            <ul data-velocity-list class="list-unstyled"></ul>
+        </div>
+        <div class="col-lg-12 result-section">
+            <h2>Bug Free Releases</h2>
+            <ul data-quality-list class="list-unstyled"></ul>
+        </div>
+        <div class="col-lg-12 result-section">
+            <h2>Work Completed</h2>
+            <ul data-completed-list class="list-unstyled"></ul>
+        </div>
     </div>
-    <div class="col-lg-12 result-section">
-        <h2>Bug Free Releases</h2>
-        <ul data-quality-list class="list-unstyled"></ul>
-    </div>
-    <div class="col-lg-12 result-section">
-        <h2>Work Completed</h2>
-        <ul data-completed-list class="list-unstyled"></ul>
-    </div>
-</div>
-<div class="row">
-    <canvas data-chart></canvas>
-</div>
-
-<template data-template="result">
-    <li class="col-md-4 result-item" data-result-container>
-        <h3 data-team class="result-item-title"></h3>
-        <strong data-result class="result-item-value"></strong>
+    <div class="row">
         <canvas data-chart></canvas>
-    </li>
-</template>
+    </div>
 
-@section scripts {
-    <script>
-        var theTeams = {};
+    <template data-template="result">
+        <li class="col-md-4 result-item" data-result-container>
+            <h3 data-team class="result-item-title"></h3>
+            <strong data-result class="result-item-value"></strong>
+            <canvas data-chart></canvas>
+        </li>
+    </template>
 
-        FB.teams.on('child_added', function(snapshot) {
-            var obj = {
-                name: snapshot.val().name,
-                effort: [],
-                cards: [],
-                defects: [],
-                quality: [],
-                complete: [],
-                qualityLabels: [],
-                completeLabels: [],
-                velocityLabels: [],
-                progress: '0%'
-            };
-            theTeams[obj.name] = obj;
-        });
+    @section scripts {
+        <script>
+            var theTeams = {};
 
-        FB.teams.on('value', function() {
-            $.each(Object.keys(theTeams), function(index, team) {
-                FB.iterations.on('child_added', function(snapshot) {
-
-                    var date = new Date(parseInt(snapshot.key()));
-
-                    if (date < new Date()) {
-                        var dateString = (date.getMonth() + 1) + '/' + date.getDate();
-
-                        if (snapshot.val()[team].effort) {
-                            theTeams[team].effort.push(snapshot.val()[team].effort);
-                            theTeams[team].velocityLabels.push(dateString);
-                        }
-                        if (snapshot.val()[team].percentComplete) {
-                            theTeams[team].complete.push(snapshot.val()[team].percentComplete);
-                            theTeams[team].completeLabels.push(dateString);
-                        }
-
-                        var cards = snapshot.val()[team].cards;
-                        if (cards) {
-                            theTeams[team].cards.push(Object.keys(snapshot.val()[team].cards).length);
-                        } else {
-                            theTeams[team].cards.push(0);
-                        }
-
-                        var defects = snapshot.val()[team].defects;
-                        if (defects) {
-                            theTeams[team].defects.push(Object.keys(snapshot.val()[team].defects).length);
-                        } else {
-                            theTeams[team].defects.push(0);
-                        }
-
-                        var totalCards = theTeams[team].cards;
-                        var cardsSum = totalCards.reduce(function(a, b) {
-                            return a + b;
-                        });
-
-                        var totalDefects = theTeams[team].defects;
-                        var defectsSum = totalDefects.reduce(function(a, b) {
-                            return a + b;
-                        });
-
-                        theTeams[team].quality.push(100 - ((defectsSum / cardsSum).toFixed(2) * 100));
-                        theTeams[team].qualityLabels.push(dateString);
-                    } else {
-                        //For current iteration
-                        $('[data-current-progress]').append('<div class=col-md-4><h3>Team ' + theTeams[team].name + ': <b>' + snapshot.val()[team].percentComplete + '%</b></h3></div>');
-                    }
-                });
-            });
-        });
-
-        FB.iterations.on('value', function(snapshot) {
-
-            var date = new Date(parseInt(snapshot.key()));
-
-            if (date > new Date()) {
-
-            }
-
-            $.each(Object.keys(theTeams), function(index, teamName) {
-                var velocities = theTeams[teamName].effort;
-                var velocitySum = velocities.reduce(function(a, b) {
-                    return a + b;
-                });
-                var velocityAvg = (velocitySum / velocities.length).toFixed(2);
-                var velocityDisplay = $($('[data-template=result]').html().trim());
-
-                velocityDisplay.find('[data-team]').text('Team ' + teamName);
-                velocityDisplay.find('[data-result]').text(velocityAvg);
-
-                var qualities = theTeams[teamName].quality;
-                var currentQuality = qualities[qualities.length - 1];
-                var qualityDisplay = $($('[data-template=result]').html().trim());
-
-                qualityDisplay.find('[data-team]').text('Team ' + teamName);
-                qualityDisplay.find('[data-result]').text(currentQuality + '%');
-
-                var completes = theTeams[teamName].complete;
-                var completedDisplay = $($('[data-template=result]').html().trim());
-                var completedSum = theTeams[teamName].complete.reduce(function(a, b) {
-                    return a + b;
-                });
-                var completedAverage = Math.round(completedSum / theTeams[teamName].complete.length);
-
-                completedDisplay.find('[data-team]').text('Team ' + teamName);
-                completedDisplay.find('[data-result]').text(completedAverage + '%');
-
-                $('[data-velocity-list]').append(velocityDisplay);
-                $('[data-quality-list]').append(qualityDisplay);
-                $('[data-completed-list]').append(completedDisplay);
-
-                var chartContainer = $('[data-velocity-list] [data-result-container]:last-child').find('[data-chart]');
-                makeChart([velocities], theTeams[teamName].velocityLabels, chartContainer, {});
-                chartContainer = $('[data-quality-list] [data-result-container]:last-child').find('[data-chart]');
-                makeChart([qualities], theTeams[teamName].qualityLabels, chartContainer, {});
-                chartContainer = $('[data-completed-list] [data-result-container]:last-child').find('[data-chart]');
-                makeChart([completes], theTeams[teamName].completeLabels, chartContainer, {});
-
+            FB.teams.on('child_added', function(snapshot) {
+                var obj = {
+                    name: snapshot.val().name,
+                    effort: [],
+                    cards: [],
+                    defects: [],
+                    quality: [],
+                    complete: [],
+                    qualityLabels: [],
+                    completeLabels: [],
+                    velocityLabels: [],
+                    progress: '0%'
+                };
+                theTeams[obj.name] = obj;
             });
 
+            FB.teams.on('value', function() {
+                $.each(Object.keys(theTeams), function(index, team) {
+                    FB.iterations.on('child_added', function(snapshot) {
 
-        });
+                        var date = new Date(parseInt(snapshot.key()));
+
+                        if (date < new Date()) {
+                            var dateString = (date.getMonth() + 1) + '/' + date.getDate();
+
+                            if (snapshot.val()[team].effort) {
+                                theTeams[team].effort.push(snapshot.val()[team].effort);
+                                theTeams[team].velocityLabels.push(dateString);
+                            }
+                            if (snapshot.val()[team].percentComplete) {
+                                theTeams[team].complete.push(snapshot.val()[team].percentComplete);
+                                theTeams[team].completeLabels.push(dateString);
+                            }
+
+                            var cards = snapshot.val()[team].cards;
+                            if (cards) {
+                                theTeams[team].cards.push(Object.keys(snapshot.val()[team].cards).length);
+                            } else {
+                                theTeams[team].cards.push(0);
+                            }
+
+                            var defects = snapshot.val()[team].defects;
+                            if (defects) {
+                                theTeams[team].defects.push(Object.keys(snapshot.val()[team].defects).length);
+                            } else {
+                                theTeams[team].defects.push(0);
+                            }
+
+                            var totalCards = theTeams[team].cards;
+                            var cardsSum = totalCards.reduce(function(a, b) {
+                                return a + b;
+                            });
+
+                            var totalDefects = theTeams[team].defects;
+                            var defectsSum = totalDefects.reduce(function(a, b) {
+                                return a + b;
+                            });
+
+                            theTeams[team].quality.push(100 - ((defectsSum / cardsSum).toFixed(2) * 100));
+                            theTeams[team].qualityLabels.push(dateString);
+                        } else {
+                            //For current iteration
+                            $('[data-current-progress]').append('<div class=col-md-4><h3>Team ' + theTeams[team].name + ': <b>' + snapshot.val()[team].percentComplete + '%</b></h3></div>');
+                        }
+                    });
+                });
+            });
+
+            FB.iterations.on('value', function(snapshot) {
+
+                var date = new Date(parseInt(snapshot.key()));
+
+                if (date > new Date()) {
+
+                }
+
+                $.each(Object.keys(theTeams), function(index, teamName) {
+                    var velocities = theTeams[teamName].effort;
+                    var velocitySum = velocities.reduce(function(a, b) {
+                        return a + b;
+                    });
+                    var velocityAvg = (velocitySum / velocities.length).toFixed(2);
+                    var velocityDisplay = $($('[data-template=result]').html().trim());
+
+                    velocityDisplay.find('[data-team]').text('Team ' + teamName);
+                    velocityDisplay.find('[data-result]').text(velocityAvg);
+
+                    var qualities = theTeams[teamName].quality;
+                    var currentQuality = qualities[qualities.length - 1];
+                    var qualityDisplay = $($('[data-template=result]').html().trim());
+
+                    qualityDisplay.find('[data-team]').text('Team ' + teamName);
+                    qualityDisplay.find('[data-result]').text(currentQuality + '%');
+
+                    var completes = theTeams[teamName].complete;
+                    var completedDisplay = $($('[data-template=result]').html().trim());
+                    var completedSum = theTeams[teamName].complete.reduce(function(a, b) {
+                        return a + b;
+                    });
+                    var completedAverage = Math.round(completedSum / theTeams[teamName].complete.length);
+
+                    completedDisplay.find('[data-team]').text('Team ' + teamName);
+                    completedDisplay.find('[data-result]').text(completedAverage + '%');
+
+                    $('[data-velocity-list]').append(velocityDisplay);
+                    $('[data-quality-list]').append(qualityDisplay);
+                    $('[data-completed-list]').append(completedDisplay);
+
+                    var chartContainer = $('[data-velocity-list] [data-result-container]:last-child').find('[data-chart]');
+                    makeChart([velocities], theTeams[teamName].velocityLabels, chartContainer, {});
+                    chartContainer = $('[data-quality-list] [data-result-container]:last-child').find('[data-chart]');
+                    makeChart([qualities], theTeams[teamName].qualityLabels, chartContainer, {});
+                    chartContainer = $('[data-completed-list] [data-result-container]:last-child').find('[data-chart]');
+                    makeChart([completes], theTeams[teamName].completeLabels, chartContainer, {});
+
+                });
 
 
-    </script>
-}
+            });
+
+
+        </script>
+    }*@

@@ -1,11 +1,41 @@
 ﻿var TrelloData = {
     webProdMgmtOrg: '504a0eb550849e151f0b3f30',
-    webProdOrg: '504a56a70022d3d72e198e98'
+    webProdOrg: '504a56a70022d3d72e198e98',
+    appKey: 'aaaccf39e74da6f15762c374cbcb5888',
 };
+
+var Board = function (id, team) {
+    this.id = id;
+    this.team = team;
+}
+
+var List = function (id, name, team, board) {
+    this.id = id;
+    this.name = name;
+    this.team = team;
+    this.board = board;
+    this.effort = 0;
+    this.effortPromised = getEffortPromised(name);
+    this.endDate = getEndDate(name);
+};
+
+var Card = function (desc, team, list, board, people, actions) {
+    this.desc = desc;
+    this.team = team;
+    this.list = list;
+    this.board = board;
+    this.people = getPeople(people);
+    this.dateCompleted = getDateCompleted(actions, list);
+    this.workType = getWorkType(desc);
+    this.effort = getCardEffort(desc);
+}
+
+var Iteration = function (endDate) {
+    this.endDate = endDate;
+}
 
 var dataPointsToPlot = 12;
 
-var workTypes = ['CAP', 'DAP', 'OFI', 'CAR', 'SEO', 'BUG', 'Support', 'RAP'];
 var colors = ['rgba(6, 57, 81, 1)', 'rgba(193, 48, 24, 1)', 'rgba(243, 111, 19, 1)', 'rgba(235, 203, 56, 1)', 'rgba(162, 185, 105, 1)', 'rgba(13, 149, 188, 1)', 'rgba(92, 167, 147, 1)', 'rgba(217, 78, 31, 1)'];
 var doneLists = [];
 var doneListIndex = 0;
@@ -27,6 +57,21 @@ var FB = {
     names: fbRootRef.child('names')
 };
 
+if (jQuery.when.all === undefined) {
+    jQuery.when.all = function (deferreds) {
+        var deferred = new jQuery.Deferred();
+        $.when.apply(jQuery, deferreds).then(
+            function () {
+                deferred.resolve(Array.prototype.slice.call(arguments));
+            },
+            function () {
+                deferred.fail(Array.prototype.slice.call(arguments));
+            });
+
+        return deferred;
+    }
+}
+
 $(document).on('ready', function () {
 
     if (loggedIn()) {
@@ -37,7 +82,10 @@ $(document).on('ready', function () {
             Trello.authorize({
                 type: 'popup',
                 name: 'Midway Measures',
-                expiration: 'never'
+                expiration: 'never',
+                success: function () {
+                    TrelloData.credentials = 'key=' + TrelloData.appKey + '&token=' + Trello.token();
+                }
             });
         }
     }
@@ -141,7 +189,6 @@ function logIn(email, password) {
 function displayUserData() {
     FB.users.child(fbRootRef.getAuth().uid).once('value', function (snapshot) {
         var me = snapshot.val();
-        console.log(me);
         $('[data-firstname]').text(me.firstName);
         $('[data-fullname]').text(me.fullName);
     });
@@ -317,20 +364,218 @@ function updateBoards() {
 }
 
 function updateCards() {
-    //TODO: Figure out how to alert when card syncing is done
-    var getDoneLists = FB.doneLists.orderByKey().limitToLast(doneListsToCheck).on('child_added', function (snapshot) {
-        var obj = {
-            'listId': snapshot.key(),
-            'team': snapshot.val().team
-        }
-        doneLists.push(obj);
-        //getCardData(snapshot.key(), snapshot.val().team);
+
+    var updateData = {
+        boards: {},
+        doneLists: {},
+        cards: {},
+        iterations: {}
+    };
+
+    // get the Trello board ids and team names for each team from Firebase DB
+    FB.teams.once('value', function (snapshot) {
+        var teams = snapshot.val();
+
+        //Add board objects to updateData
+        Object.keys(teams).forEach(function (key) {
+            var boardId = teams[key].board;
+            updateData.boards[boardId] = new Board(boardId, key);
+        });
+
+        //Get open lists from boards
+        var boardRequests = [];
+        Object.keys(updateData.boards).forEach(function (key) {
+            var boards = updateData.boards;
+            boardRequests.push($.ajax('https://api.trello.com/1/boards/' + key + '?lists=open&list_fields=id,name,idBoard&cards=open&card_fields=id,name,idList,idBoard,idMembers&actions=updateCard:idList&' + TrelloData.credentials).done(function (boardData) {
+
+                boardData.lists.forEach(function (list) {
+                    var newList = new List(list.id, list.name, boards[list.idBoard].team, list.idBoard);
+                    if (isDoneList(newList)) {
+                        updateData.doneLists[list.id] = newList;
+                        var iteration = new Iteration(newList.endDate);
+                        if (typeof updateData.iterations[iteration.endDate] === 'undefined') {
+                            updateData.iterations[iteration.endDate] = iteration;
+                        }
+                        //Set up iteration object
+                        updateData.iterations[iteration.endDate][newList.team] = {
+                            effortPromised: newList.effortPromised,
+                            cards: {},
+                            effort: 0,
+                            percentComplete: 0
+                        }
+                    }
+                });
+
+                var doneLists = updateData.doneLists,
+                    iterations = updateData.iterations;
+
+                //filter out unfinished cards
+                var cards = getFinishedCards(boardData.cards, Object.keys(doneLists));
+
+                cards.forEach(function (card) {
+
+                    var cardActions = boardData.actions.filter(function (a) {
+                        return a.data.card.id == card.id;
+                    });
+
+                    var newCard = new Card(card.name, boards[card.idBoard].team, card.idList, card.idBoard, card.idMembers, cardActions);
+
+                    updateData.cards[card.id] = newCard;
+                    doneLists[newCard.list].effort += parseFloat(newCard.effort);
+
+                    var endDate = doneLists[newCard.list].endDate,
+                        iteration = iterations[endDate][newCard.team];
+
+                    iteration.cards[card.id] = true;
+                    iteration.effort += parseFloat(newCard.effort);
+                    iteration.percentComplete = parseInt((iteration.effort / iteration.effortPromised).toFixed(2) * 100);
+
+                });
+            }));
+        });
+
+        $.when.all(boardRequests).done(function () {
+            console.log(updateData);
+        });
+
     });
-    FB.doneLists.once('value', function () {
-        FB.doneLists.off('value', getDoneLists);
-        var list = doneLists[doneListIndex];
-        getCardData(list.listId, list.team);
+
+
+    //var getDoneLists = FB.doneLists.orderByKey().limitToLast(doneListsToCheck).on('child_added', function (snapshot) {
+    //    doneLists[snapshot.key()] = {
+    //        'id': snapshot.key(),
+    //        'team': snapshot.val().team
+    //    }
+    //});
+    //FB.doneLists.once('value', function () {
+    //    FB.doneLists.off('child_added', getDoneLists);
+
+    //    var promises = [];
+
+    //    $(doneLists).each(function(index, list) {
+    //        promises.push( $.ajax('https://api.trello.com/1/lists/' + list.listId + '?fields=name&cards=open&card_fields=name,idMembers&key=' + TrelloData.appKey + '&token=' + Trello.token()));
+    //    });
+
+    //    $.when.all(promises).done(function (responses) {
+    //        var cards = {},
+    //            cardRequests = [];
+    //        $(responses).each(function () {
+    //            var list = this[0];
+    //            $(list.cards).each(function () {
+    //                //'actions': 'updateCard:idList'
+    //                // make this a regular ajax request??
+    //                cardRequests.push($.ajax('https://api.trello.com/1/cards/' + this.id + '/actions?key=' + TrelloData.appKey + '&token=' + Trello.token()).done(function(data) {
+    //                    var card = {
+    //                        dateCompleted: getDateCompleted(data.actions, list.id),
+    //                        desc: data.name,
+    //                        effort: getCardEffort(data.name),
+    //                        team: '???',
+    //                        workType: getWorkType(data.name)
+    //                    }
+    //                    console.log(card);
+    //                    cards.push(card);
+    //                }));
+
+    //            });
+
+    //        });
+    //        $.when.all(cardRequests).done(function (cardResponses) {
+    //            //$(cardResponses).each(function() {
+    //            //    var trelloCard = this[0];
+    //            //    var card = {
+    //            //        dateCompleted: getDateCompleted(data.actions, list.id),
+    //            //        desc: data.name,
+    //            //        effort: getCardEffort(data.name),
+    //            //        team: '???',
+    //            //        workType: getWorkType(data.name)
+    //            //    }
+    //            //});
+    //            console.log(cards);
+    //        });
+    //    });
+    //});
+}
+
+function getCardEffort(desc) {
+    var matchesEffort = desc.match(/\[(.*?)\]/),
+        effort;
+    if (matchesEffort) {
+        effort = matchesEffort[1];
+        if (effort == '1/2') effort = .5;
+    } else {
+        effort = 0;
+    }
+    return effort;
+}
+
+function getPeople(members) {
+    var people = {}
+    if (members) {
+        members.forEach(function (member) {
+            people[member] = true;
+        });
+    }
+    return people;
+}
+
+function getWorkType(desc) {
+    var workTypes = ['CAP', 'DAP', 'OFI', 'CAR', 'SEO', 'BUG', 'Support', 'RAP'],
+            workType;
+    workTypes.forEach(function (type) {
+        if (desc.indexOf(type) >= 0) {
+            workType = type;
+            return false;
+        };
+        return true;
     });
+    return workType ? workType : 'Other';
+}
+
+function getDateCompleted(actions, list) {
+    //console.log('actions: ', actions.length);
+    if (actions) {
+        var dateComplete;
+        actions.forEach(function (action) {
+            if (action.data.listAfter.id == list) {
+                dateComplete = Date.parse(action.date);
+                return false;
+            }
+            return true;
+        });
+    }
+    return dateComplete ? dateComplete : 'Unknown';
+}
+
+function getEndDate(listName) {
+    var dateString = listName.substr(5, 10);
+    return Date.parse(dateString);
+}
+
+function getEffortPromised(listName) {
+    var effortPromised;
+    if (listName.indexOf('[') >= 0) {
+        effortPromised = parseFloat(listName.substring((listName.indexOf('[') + 1), listName.indexOf(']')));
+    }
+    return effortPromised ? effortPromised : 0;
+}
+
+function isDoneList(list) {
+    return list.name.indexOf('Done') >= 0;
+};
+
+function getFinishedCards(cards, doneLists) {
+    cards = cards.filter(function (card) {
+        var isDone = false;
+        doneLists.forEach(function (doneList) {
+            if (card.idList == doneList) {
+                isDone = true;
+                return false;
+            }
+            return true;
+        });
+        return isDone;
+    });
+    return cards;
 }
 
 function updateDoneLists(teamBoard, teamName) {

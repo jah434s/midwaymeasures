@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html>
+<html ng-app="midwayMeasures">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,8 +7,20 @@
     <link rel="stylesheet" href="/Content/css/bootstrap.css"/>
     <link rel="stylesheet" href="/Content/css/Site.css" />
     @Scripts.Render("~/bundles/modernizr")
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    <script src="https://api.trello.com/1/client.js?key=aaaccf39e74da6f15762c374cbcb5888"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular.min.js"></script>
+    <script src="https://cdn.firebase.com/js/client/2.2.4/firebase.js"></script>
+    @Scripts.Render("~/Scripts/angularfire.min.js")
+    @Scripts.Render("~/Scripts/ChartJS/Chart.js")
+    @Scripts.Render("~/Scripts/ChartJS/Chart.Line.js")
+    @Scripts.Render("~/Scripts/Later.min.js")
+    @Scripts.Render("~/Scripts/app.js")
+    @Scripts.Render("~/Scripts/Site.js")
+    <script src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/1.4.5/numeral.min.js"></script>
 </head>
-<body class="logged-out">
+<body ng-controller="mmCtrl" class="logged-out">
     <div class="navbar">
         <div class="container">
             <div class="navbar-header">
@@ -129,15 +141,7 @@
         </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->
 
-    @Scripts.Render("~/bundles/jquery")
-    @Scripts.Render("~/bundles/bootstrap")
-    <script src="https://api.trello.com/1/client.js?key=aaaccf39e74da6f15762c374cbcb5888"></script>
-    <script src="https://cdn.firebase.com/js/client/2.2.4/firebase.js"></script>
-    @Scripts.Render("~/Scripts/ChartJS/Chart.js")
-    @Scripts.Render("~/Scripts/ChartJS/Chart.Line.js")
-    @Scripts.Render("~/Scripts/Later.min.js")
-    @Scripts.Render("~/Scripts/Site.js")
-    <script src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/1.4.5/numeral.min.js"></script>
+
 
     @RenderSection("scripts", required: false)
 </body>

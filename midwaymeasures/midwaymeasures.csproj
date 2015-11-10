@@ -200,6 +200,8 @@
     <Content Include="Content\css\Site.css.map" />
     <None Include="Content\scss\Site.scss" />
     <Content Include="gulpfile.js" />
+    <Content Include="Scripts\angularfire.min.js" />
+    <Content Include="Scripts\app.js" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="package.json" />
