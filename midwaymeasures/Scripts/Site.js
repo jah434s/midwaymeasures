@@ -45,16 +45,8 @@ var fbRootRef = new Firebase("https://midway-measures.firebaseio.com/");
 
 var authData = fbRootRef.getAuth();
 
-var FB = {
-    people: fbRootRef.child('people'),
-    bucks: fbRootRef.child('bullseyeBucks'),
-    cards: fbRootRef.child('cards'),
-    teams: fbRootRef.child('teams'),
-    doneLists: fbRootRef.child('doneLists'),
-    iterations: fbRootRef.child('iterations'),
-    defects: fbRootRef.child('defects'),
-    users: fbRootRef.child('users'),
-    names: fbRootRef.child('names')
+var FB = function(childName) {
+    return fbRootRef.child(childName);
 };
 
 if (jQuery.when.all === undefined) {
@@ -149,7 +141,7 @@ $(document).on('ready', function () {
     });
 
     //Get Teams from DB
-    FB.teams.on('child_added', function (snapshot) {
+    FB('teams').on('child_added', function (snapshot) {
         var team = snapshot.key();
         $('[data-team-list]').append('<option data-buck-team data-fb-field="team">' + team + '</option>');
     });
@@ -161,7 +153,7 @@ function loggedIn() {
 }
 
 function isAdmin() {
-    FB.users.child(authData.auth.uid).once('value', function (snapshot) {
+    FB('users').child(authData.auth.uid).once('value', function (snapshot) {
         return snapshot.val().role == 'admin';
     });
 }
@@ -187,7 +179,7 @@ function logIn(email, password) {
 }
 
 function displayUserData() {
-    FB.users.child(fbRootRef.getAuth().uid).once('value', function (snapshot) {
+    FB('users').child(fbRootRef.getAuth().uid).once('value', function (snapshot) {
         var me = snapshot.val();
         $('[data-firstname]').text(me.firstName);
         $('[data-fullname]').text(me.fullName);
@@ -240,10 +232,10 @@ function register() {
                         $('body').addClass('admin');
                     }
                     //Create user record and name record in DB
-                    FB.users.child(fbRootRef.getAuth().uid).update(user, function () {
+                    FB('users').child(fbRootRef.getAuth().uid).update(user, function () {
                         var obj = {};
                         obj[user.fullName] = fbRootRef.getAuth().uid;
-                        FB.names.update(obj);
+                        FB('names').update(obj);
                     });
 
                 }
@@ -255,8 +247,7 @@ function register() {
 
 function makeChart(dataArray, labels, container, options) {
 
-    FB.iterations.once('value', function () {
-
+    FB('iterations').once('value', function () {
 
         var chartInfo = [];
         for (var i = 0; i < dataArray.length; i++) {
@@ -364,17 +355,16 @@ $('[data-sync=cards]').on('click', updateCards);
 //}
 
 function updateCards() {
-    
-    var boards = {}
-
-    var updateData = {
-        doneLists: {},
-        cards: {},
-        iterations: {}
-    };
+    //The updateData object will hold all data that we will be sending to the DB (Firebase)
+    var boards = {},
+        updateData = {
+            doneLists: {},
+            cards: {},
+            iterations: {}
+        };
 
     // get the Trello board ids and team names for each team from Firebase DB
-    FB.teams.once('value', function (snapshot) {
+    FB('teams').once('value', function (snapshot) {
         var teams = snapshot.val();
 
         //Add board objects to updateData
@@ -386,17 +376,22 @@ function updateCards() {
         //Get open lists from boards
         var boardRequests = [];
         Object.keys(boards).forEach(function (key) {
-
+            
+            //Push board ajax requests and done functions to array, so we can act when all requests are done
             boardRequests.push($.ajax('https://api.trello.com/1/boards/' + key + '?lists=open&list_fields=id,name,idBoard&cards=open&card_fields=id,name,idList,idBoard,idMembers&actions=updateCard:idList&' + TrelloData.credentials).done(function (boardData) {
+
                 boardData.lists.forEach(function (list) {
+                    //Create List object for every open list
                     var newList = new List(list.id, list.name, boards[list.idBoard].team, list.idBoard);
+                    //If it's a 'Done' list, add it to the updateData object
                     if (isDoneList(newList)) {
                         updateData.doneLists[list.id] = newList;
+
+                        //Set up iteration object
                         var iteration = new Iteration(newList.endDate);
                         if (typeof updateData.iterations[iteration.endDate] === 'undefined') {
                             updateData.iterations[iteration.endDate] = iteration;
                         }
-                        //Set up iteration object
                         updateData.iterations[iteration.endDate][newList.team] = {
                             effortPromised: newList.effortPromised,
                             cards: {},
@@ -413,7 +408,7 @@ function updateCards() {
                 var cards = getFinishedCards(boardData.cards, Object.keys(doneLists));
 
                 cards.forEach(function (card) {
-
+                    //boardData.actions contains all actions for the board, so filter out actions unrelated to the current card
                     var cardActions = boardData.actions.filter(function (a) {
                         return a.data.card.id == card.id;
                     });
@@ -434,12 +429,17 @@ function updateCards() {
             }));
         });
 
+        //When all requests to Trello are done...
         $.when.all(boardRequests).done(function () {
-            console.log(boards, updateData);
-            //fbRootRef.update(updateData);
-            console.info('Updated!');
+            //update the data in the DB
+            FB('doneLists').update(updateData.doneLists, fbCallback);
+            FB('cards').update(updateData.cards, fbCallback);
+            //iterations must be updated separately to prevent data loss
+            Object.keys(updateData.iterations).forEach(function (iterationKey) {
+                var iteration = updateData.iterations[iterationKey];
+                FB('iterations/' + iterationKey).update(iteration);
+            });
         });
-
     });
 }
 
@@ -479,7 +479,6 @@ function getWorkType(desc) {
 }
 
 function getDateCompleted(actions, list) {
-    //console.log('actions: ', actions.length);
     if (actions) {
         var dateComplete;
         actions.forEach(function (action) {
@@ -490,7 +489,7 @@ function getDateCompleted(actions, list) {
             return true;
         });
     }
-    return dateComplete ? dateComplete : 'Unknown';
+    return dateComplete ? dateComplete : null;
 }
 
 function getEndDate(listName) {
@@ -525,16 +524,31 @@ function getFinishedCards(cards, doneLists) {
     return cards;
 }
 
-//Update Average Velocity
-FB.iterations.on('value', function (snapshot) {
-    //get teams first
+//Update Velocity
+FB('iterations').on('value', function (snapshot) {
     var iterations = snapshot.val();
-    console.log(iterations);
+    FB('teams').once('value', function (snapshot) {
+        var teams = snapshot.val();  
+        Object.keys(teams).forEach(function (team) {
+            var velocities = [];
+            Object.keys(iterations).forEach(function (iterationKey) {
+                var effort = iterations[iterationKey][team].effort;
+                if (iterations[iterationKey].endDate < Date.parse(new Date())) {
+                    velocities.push(effort);
+                } else {
+                    //Update current progress
+                    var currentProgress = parseInt((effort / iterations[iterationKey][team].effortPromised).toFixed(2) * 100);
+                    FB('displayData').child(team).update({ currentProgress: currentProgress });
+                }
+            });
+            var velocitySum = velocities.reduce(function (a, b) {
+                return a + b;
+            });
+            var velocityAvg = (velocitySum / velocities.length).toFixed(2);
+            FB('displayData').child(team).update({averageVelocity: velocityAvg}, fbCallback);
+        });
+    })
 });
-
-function averageVelocity(team) {
-    FB.iterations.child(team).on(v)
-}
 
 //function updateDoneLists(teamBoard, teamName) {
 //    Trello.boards.get(teamBoard, { 'lists': 'all' }, function (board) {
