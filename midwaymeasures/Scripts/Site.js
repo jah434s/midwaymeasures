@@ -431,16 +431,39 @@ function updateCards() {
 
         //When all requests to Trello are done...
         $.when.all(boardRequests).done(function () {
-            //update the data in the DB
-            FB('doneLists').update(updateData.doneLists, fbCallback);
-            FB('cards').update(updateData.cards, fbCallback);
-            //iterations must be updated separately to prevent data loss
-            Object.keys(updateData.iterations).forEach(function (iterationKey) {
-                var iteration = updateData.iterations[iterationKey];
-                FB('iterations/' + iterationKey).update(iteration);
+            //A request for a board only returns a certain number of actions, so just in case let's make sure all cards have their action-related data
+            $.when.all(cleanUpIncompleteCards(updateData.cards)).done(function() {
+                
             });
+            console.info('Done');
+            //update the data in the DB
+            //FB('doneLists').update(updateData.doneLists, fbCallback);
+            //FB('cards').update(updateData.cards, fbCallback);
+            ////iterations must be updated separately to prevent data loss
+            //Object.keys(updateData.iterations).forEach(function (iterationKey) {
+            //    var iteration = updateData.iterations[iterationKey];
+            //    FB('iterations/' + iterationKey).update(iteration);
+            //});
         });
     });
+}
+
+function cleanUpIncompleteCards(cards) {
+    var incompleteCards = [],
+        cardRequests = [];
+    Object.keys(cards).forEach(function (cardKey) {
+        //console.log(updateData.cards[cardKey].dateCompleted);
+        var card = cards[cardKey];
+        if (!card.dateCompleted) {
+            cardRequests.push($.ajax('https://api.trello.com/1/cards/' + cardKey + '/actions?filter=updateCard:idList&' + TrelloData.credentials).done(function(actions) {
+                card.dateCompleted = getDateCompleted(actions, card.list);
+            }));
+        }
+    });
+    $.when.all(cardRequests).done(function() {
+        console.info(cards);
+    });
+
 }
 
 function getCardEffort(desc) {
@@ -527,11 +550,11 @@ function getFinishedCards(cards, doneLists) {
 //Update Velocity
 FB('iterations').on('value', function (snapshot) {
     var iterations = snapshot.val();
-    FB('teams').once('value', function (snapshot) {
-        var teams = snapshot.val();  
-        Object.keys(teams).forEach(function (team) {
+    FB('teams').once('value', function(teamSnapshot) {
+        var teams = teamSnapshot.val();
+        Object.keys(teams).forEach(function(team) {
             var velocities = [];
-            Object.keys(iterations).forEach(function (iterationKey) {
+            Object.keys(iterations).forEach(function(iterationKey) {
                 var effort = iterations[iterationKey][team].effort;
                 if (iterations[iterationKey].endDate < Date.parse(new Date())) {
                     velocities.push(effort);
@@ -541,13 +564,13 @@ FB('iterations').on('value', function (snapshot) {
                     FB('displayData').child(team).update({ currentProgress: currentProgress });
                 }
             });
-            var velocitySum = velocities.reduce(function (a, b) {
+            var velocitySum = velocities.reduce(function(a, b) {
                 return a + b;
             });
             var velocityAvg = (velocitySum / velocities.length).toFixed(2);
-            FB('displayData').child(team).update({averageVelocity: velocityAvg}, fbCallback);
+            FB('displayData').child(team).update({ averageVelocity: velocityAvg }, fbCallback);
         });
-    })
+    });
 });
 
 //function updateDoneLists(teamBoard, teamName) {
