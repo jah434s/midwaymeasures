@@ -28,8 +28,16 @@
 
 @section scripts {
     <script>
+        var Bug = function(date, desc, people, team, iteration) {
+            this.dateIntroduced = date;
+            this.description = desc;
+            this.people = people;
+            this.team = team;
+            this.iteration = iteration;
+        }
+
         //Get People from DB
-        FB.names.on('child_added', function(snapshot) {
+        FB('people').orderByChild('status').equalTo('active').on('child_added', function(snapshot) {
             var name = snapshot.key();
             $('[data-bug="people"]').append('<label><input type=checkbox data-bug="person">' + name + '</label>');
         });
@@ -37,54 +45,60 @@
         //Handle form submission
         $('[data-bug=form]').on('submit', function(e) {
             e.preventDefault();
-            var bug = {
-                dateIntroduced: Date.parse($('[data-bug=date]').val()),
-                description: $('[data-bug=description]').val(),
-                people: {},
-                team: $(this).find('[data-team-list]').val()
-            }
-            console.log(bug);
-            $('[data-bug=person]:checked').each(function(index, checkbox) {
+            var date = Date.parse($('[data-bug=date]').val()),
+                desc = $('[data-bug=description]').val(),
+                people = {},
+                team = $(this).find('[data-team-list]').val();
+
+            $('[data-bug=person]:checked').each(function (index, checkbox) {
                 var person = $(checkbox).parents('label').first().text();
-                bug.people[person] = true;
+                people[person] = true;
             });
 
-            //add defect to DB
-            FB.defects.push(bug, function(error) {
-                if (error) {
-                    $('[data-error-message]').text(error);
-                    $('[data-error]').removeClass('hidden');
-                } else {
-                    $('[data-success-message]').text('Bug submitted.');
-                    $('[data-success]').removeClass('hidden');
-                    $('[data-bug=form]')[0].reset();
-
-                    //After the defect is added...
-                    FB.defects.limitToLast(1).on('child_added', function(defect) {
-                        //create defect reference
-                        var defectObj = {};
-                        defectObj[defect.key()] = true;
-
-                        //add defect reference to iteration
-                        FB.iterations.orderByChild('endDate').startAt(defect.val().dateIntroduced).limitToFirst(1).on('child_added', function(iteration) {
-                            FB.iterations.child(iteration.val().endDate).child(defect.val().team).child('defects').update(defectObj, fbCallback);
-                        });
-
-                        //add defect reference to person
-                        $.each(Object.keys(defect.val().people), function(index, person) {
-                            FB.names.orderByKey().equalTo(person).once('child_added', function(name) {
-                                FB.users.child(name.val()).child('defects').update(defectObj, fbCallback);
-                            });
-                            
-                        });
-
-                        //add defect reference to team
-                        FB.teams.child(defect.val().team).child('defects').update(defectObj, fbCallback);
-
-                    });
-                }
+            FB('iterations').orderByChild('endDate').startAt(date).limitToFirst(1).once('child_added', function(iterationSnapshot) {
+                //FB.iterations.child(iteration.val().endDate).child(defect.val().team).child('defects').update(defectObj, fbCallback);
+                var iteration = iterationSnapshot.key();
+                var bug = new Bug(date, desc, people, team, iteration);
+                //Add defect to the DB
+                FB('defects').push(bug, fbCallback);
             });
         });
+
+        FB('defects').limitToLast(1).on('child_added', function(snapshot) {
+            var addedBug = snapshot.val(),
+                bugRef = {};
+            bugRef[snapshot.key()] = true;
+
+            //Add reference to each person
+            Object.keys(addedBug.people).forEach(function(name) {
+                FB('people').child(name).child('defects').update(bugRef, fbCallback);
+            });
+
+            //Add reference to team
+            FB('teams').child(addedBug.team).child('defects').update(bugRef, fbCallback);
+
+            //Add reference to iteration
+            FB('iterations').child(addedBug.iteration).child(addedBug.team).child('defects').update(bugRef, fbCallback);
+
+        });
+
+        FB('defects').on('child_removed', function(snapshot) {
+            var bugKey = snapshot.key(),
+                removedBug = snapshot.val();
+
+            //Remove object from each person
+            Object.keys(removedBug.people).forEach(function(name) {
+                FB('people').child(name).child('defects').child(bugKey).remove();
+            });
+
+            //Remove reference from team object
+            FB('teams').child(removedBug.team).child('defects').child(bugKey).remove();
+
+            //Remove reference from iteration object
+            FB('iterations').child(removedBug.iteration).child(removedBug.team).child('defects').child(bugKey).remove();
+        });
+
+        //TODO handle updating of references on child_changed (including deletion of appropriate references)
 
     </script>
 }

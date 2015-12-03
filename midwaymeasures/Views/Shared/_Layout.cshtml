@@ -19,6 +19,12 @@
     @Scripts.Render("~/Scripts/app.js")
     @Scripts.Render("~/Scripts/Site.js")
     <script src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/1.4.5/numeral.min.js"></script>
+    <script>
+        var ref = new Firebase('https://midway-measures.firebaseio.com');
+        ref.on('value', function(snap) {
+            alert(snap.val());
+        });
+    </script>
 </head>
 <body ng-controller="mmCtrl" class="logged-out">
     <div class="navbar">

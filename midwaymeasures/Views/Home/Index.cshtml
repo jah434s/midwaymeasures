@@ -4,15 +4,22 @@
 
 
 <h1>Web Production Measures</h1>
-<div class="row" data-current-progress>
+<div class="row">
     <h2 class="col-xs-12">Current Iteration Progress</h2>
     <div class=col-md-4 ng-repeat ="team in teams"> 
         <h3>Team {{ team.name }}: <b>{{ display[team.name].currentProgress }}%</b></h3>
     </div>
 </div>
 <hr />
-<div class="row" data-current-progress>
+<div class="row">
     <h2 class="col-xs-12">Velocity</h2>
+    <div class=col-md-4 ng-repeat="team in teams">
+        <h3>Team {{ team.name }}: <b>{{ display[team.name].averageVelocity }}</b></h3>
+    </div>
+</div>
+<hr />
+<div class="row">
+    <h2 class="col-xs-12">Bug Free Work Items</h2>
     <div class=col-md-4 ng-repeat="team in teams">
         <h3>Team {{ team.name }}: <b>{{ display[team.name].averageVelocity }}</b></h3>
     </div>
