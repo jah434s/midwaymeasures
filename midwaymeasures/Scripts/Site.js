@@ -36,7 +36,7 @@ var Iteration = function (endDate) {
     this.endDate = endDate;
 }
 
-var Team = function(name) {
+var Team = function (name) {
     this.name = name;
     this.cards = {};
     this.doneLists = {}
@@ -53,7 +53,7 @@ var fbRootRef = new Firebase("https://midway-measures.firebaseio.com/");
 
 var authData = fbRootRef.getAuth();
 
-var FB = function(childName) {
+var FB = function (childName) {
     return fbRootRef.child(childName);
 };
 
@@ -253,39 +253,39 @@ function register() {
     });
 }
 
-function makeChart(dataArray, labels, container, options) {
+function makeChart(dataArray, labels, $container, options) {
 
-    FB('iterations').once('value', function () {
-
-        var chartInfo = [];
-        for (var i = 0; i < dataArray.length; i++) {
-            if (dataArray[i].length > dataPointsToPlot) {
-                dataArray[i] = dataArray[i].slice(Math.max(dataArray[i].length - dataPointsToPlot, 1));
-                labels = labels.slice(Math.max(labels.length - dataPointsToPlot, 1));
-            }
-            chartInfo[i] = {
-                label: 'team',
-                fillColor: colors[i].replace(', 1)', ', 0.2)'),
-                strokeColor: colors[i],
-                pointColor: colors[i],
-                pointStrokeColor: "#fff",
-                pointHighlightFill: "#fff",
-                pointHighlightStroke: colors[i],
-                data: dataArray[i]
-            }
+    var chartInfo = [];
+    for (var i = 0; i < dataArray.length; i++) {
+        if (dataArray[i].length > dataPointsToPlot) {
+            dataArray[i] = dataArray[i].slice(Math.max(dataArray[i].length - dataPointsToPlot, 1));
         }
+        if (labels.length > dataArray[i].length) {
+            labels = labels.slice(Math.max(labels.length - dataArray[i].length, 1));
+        }
+        //console.log(dataArray, labels, colors, i);
+        chartInfo[i] = {
+            label: 'team',
+            fillColor: colors[i].replace(', 1)', ', 0.2)'),
+            strokeColor: colors[i],
+            pointColor: colors[i],
+            pointStrokeColor: "#fff",
+            pointHighlightFill: "#fff",
+            pointHighlightStroke: colors[i],
+            data: dataArray[i]
+        }
+    }
 
-        var data = {
-            labels: labels,
-            datasets: chartInfo
-        };
+    var data = {
+        labels: labels,
+        datasets: chartInfo
+    };
 
-        var ctx = container.get(0).getContext("2d");
+    var ctx = $container.get(0).getContext("2d");
 
-        var myLineChart = new Chart(ctx).Line(data, options);
-        //$('[data-chart]').after(myLineChart.generateLegend());
+    var myLineChart = new Chart(ctx).Line(data, options);
+    //$('[data-chart]').after(myLineChart.generateLegend());
 
-    });
 }
 
 function makePieChart(labelsArray, dataArray, container) {
@@ -363,7 +363,7 @@ $('[data-sync=cards]').on('click', updateCards);
 //}
 
 //Every time a card is updated, add appropriate references to other objects
-FB('cards').on('child_changed', function(snapshot) {
+FB('cards').on('child_changed', function (snapshot) {
     addCardReferences(snapshot.key(), snapshot.val(), {});
 });
 
@@ -389,7 +389,7 @@ function addCardReferences(cardId, card, cardRef) {
 
     //Add card ref to iteration
     if (card.list) {
-        FB('doneLists').child(card.list).once('value', function(doneListSnapshot) {
+        FB('doneLists').child(card.list).once('value', function (doneListSnapshot) {
             var endDate = doneListSnapshot.val().endDate;
             FB('iterations').child(endDate).child(card.team).child('cards').update(cardRef, fbCallback);
         });
@@ -423,7 +423,7 @@ function updateCards() {
         //Get open lists from boards
         var boardRequests = [];
         Object.keys(boards).forEach(function (key) {
-            
+
             //Push board ajax requests and done functions to array, so we can act when all requests are done
             boardRequests.push($.ajax('https://api.trello.com/1/boards/' + key + '?lists=open&list_fields=id,name,idBoard&cards=open&card_fields=id,name,idList,idBoard,idMembers&actions=updateCard:idList&' + TrelloData.credentials).done(function (boardData) {
 
@@ -478,7 +478,7 @@ function updateCards() {
                     doneLists[newCard.list].effort += parseFloat(newCard.effort);
 
                     var endDate = doneLists[newCard.list].endDate;
-                        //iteration = iterations[endDate][newCard.team];
+                    //iteration = iterations[endDate][newCard.team];
 
                     //iteration.effort += parseFloat(newCard.effort);
                     //iteration.percentComplete = parseInt((iteration.effort / iteration.effortPromised).toFixed(2) * 100);
@@ -490,7 +490,7 @@ function updateCards() {
         //When all requests to Trello are done...
         $.when.all(boardRequests).done(function () {
             //A request for a board only returns a certain number of actions, so just in case let's make sure all cards have their action-related data
-            $.when.all(cleanUpIncompleteCards(updateData.cards)).done(function() {
+            $.when.all(cleanUpIncompleteCards(updateData.cards)).done(function () {
                 console.log(updateData);
                 //update the data in the DB
                 FB('doneLists').update(updateData.doneLists, fbCallback);
@@ -510,7 +510,7 @@ function cleanUpIncompleteCards(cards) {
     Object.keys(cards).forEach(function (cardKey) {
         var card = cards[cardKey];
         if (!card.dateCompleted) {
-            cardRequests.push($.ajax('https://api.trello.com/1/cards/' + cardKey + '/actions?filter=updateCard:idList&' + TrelloData.credentials).done(function(actions) {
+            cardRequests.push($.ajax('https://api.trello.com/1/cards/' + cardKey + '/actions?filter=updateCard:idList&' + TrelloData.credentials).done(function (actions) {
                 card.dateCompleted = getDateCompleted(actions, card.list);
             }));
         }
@@ -590,7 +590,7 @@ function getDateCompleted(actions, list) {
 function getDateStarted(actions, list) {
     if (actions) {
         var dateStarted;
-        actions.forEach(function(action) {
+        actions.forEach(function (action) {
             if (action.data.listAfter.id == list) {
                 dateStarted = Date.parse(action.date);
                 return false;
@@ -598,7 +598,8 @@ function getDateStarted(actions, list) {
             return true;
         });
     } else {
-        logIn('no actions');}
+        logIn('no actions');
+    }
     return dateStarted ? dateStarted : null;
 }
 
@@ -635,33 +636,55 @@ function getFinishedCards(cards, doneLists) {
 }
 
 //Update Velocity
-FB('iterations').on('value', function (snapshot) {
-    var iterations = snapshot.val();
-    FB('teams').once('value', function(teamSnapshot) {
-        var teams = teamSnapshot.val();
-        Object.keys(teams).forEach(function(team) {
-            var velocities = [];
-            Object.keys(iterations).forEach(function(iterationKey) {
-                var effort = iterations[iterationKey][team].effort;
-                if (iterations[iterationKey].endDate < Date.parse(new Date())) {
-                    velocities.push(effort);
-                } else {
-                    //Update current progress
-                    var currentProgress = parseInt((effort / iterations[iterationKey][team].effortPromised).toFixed(2) * 100);
-                    FB('displayData').child(team).update({ currentProgress: currentProgress });
-                }
-            });
-            var velocitySum = velocities.reduce(function(a, b) {
-                return a + b;
-            });
-            var velocityAvg = (velocitySum / velocities.length).toFixed(2);
-            FB('displayData').child(team).update({ averageVelocity: velocityAvg }, fbCallback);
-        });
+//FB('iterations').on('value', function (snapshot) {
+//    var iterations = snapshot.val();
+//    FB('teams').once('value', function(teamSnapshot) {
+//        var teams = teamSnapshot.val();
+//        Object.keys(teams).forEach(function(team) {
+//            var velocities = [];
+//            Object.keys(iterations).forEach(function(iterationKey) {
+//                var effort = iterations[iterationKey][team].effort;
+//                if (iterations[iterationKey].endDate < Date.parse(new Date())) {
+//                    velocities.push(effort);
+//                } else {
+//                    //Update current progress
+//                    var currentProgress = parseInt((effort / iterations[iterationKey][team].effortPromised).toFixed(2) * 100);
+//                    FB('displayData').child(team).update({ currentProgress: currentProgress });
+//                }
+//            });
+//            var velocitySum = velocities.reduce(function(a, b) {
+//                return a + b;
+//            });
+//            var velocityAvg = (velocitySum / velocities.length).toFixed(2);
+//            FB('displayData').child(team).update({ averageVelocity: velocityAvg }, fbCallback);
+//        });
+//    });
+//});
+
+function makeDisplayDate(date) {
+    date = new Date(date);
+    var month = date.getMonth() + 1,
+        day = date.getDate();
+    return month + '/' + day;
+}
+
+//$rootScope.$on('$includeContentLoaded', function () {
+//    console.log($('[quality=north]').length);
+//});
+
+function average(array) {
+    var sum = array.reduce(function (a, b) {
+        return a + b;
     });
-});
+    return sum / array.length;
+}
+
+function uniqueValues(value, index, self) {
+    return self.indexOf(value) === index;
+}
 
 //Update Bugs Percentage
-FB('defects').on('value', function(defectsSnapshot) {
+FB('defects').on('value', function (defectsSnapshot) {
     //update number of defects
 
     //update number of defects per team

@@ -42,7 +42,7 @@
             $('[data-bug="people"]').append('<label><input type=checkbox data-bug="person">' + name + '</label>');
         });
 
-        //Handle form submission
+        //Submit defect on form submission
         $('[data-bug=form]').on('submit', function(e) {
             e.preventDefault();
             var date = Date.parse($('[data-bug=date]').val()),
@@ -50,7 +50,7 @@
                 people = {},
                 team = $(this).find('[data-team-list]').val();
 
-            $('[data-bug=person]:checked').each(function (index, checkbox) {
+            $('[data-bug=person]:checked').each(function(index, checkbox) {
                 var person = $(checkbox).parents('label').first().text();
                 people[person] = true;
             });
@@ -97,6 +97,22 @@
             //Remove reference from iteration object
             FB('iterations').child(removedBug.iteration).child(removedBug.team).child('defects').child(bugKey).remove();
         });
+
+        function updateDefects() {
+            FB('defects').on('child_added', function(snapshot) {
+                var defect = snapshot.val(),
+                    defectKey = snapshot.key();
+
+                FB('iterations').orderByChild('endDate').startAt(defect.dateIntroduced).limitToFirst(1).once('child_added', function(iterationSnapshot) {
+                    var iteration = iterationSnapshot.key();
+                    FB('defects').child(defectKey).update({ iteration: iteration });
+                    var defectRef = {
+                        defectKey: true
+                    }
+                    FB('iterations').child(iteration).child(defect.team).child('defects').update(defectRef);
+                });
+            });
+        }
 
         //TODO handle updating of references on child_changed (including deletion of appropriate references)
 

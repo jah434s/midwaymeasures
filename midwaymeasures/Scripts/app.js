@@ -1,6 +1,6 @@
 ﻿var app = angular.module('midwayMeasures', ['firebase']);
 
-app.controller('mmCtrl', function($scope, $firebaseObject, $firebaseArray) {
+app.controller('mmCtrl', function($rootScope, $scope, $firebaseObject, $firebaseArray) {
 
     var displayRef = new Firebase('https://midway-measures.firebaseio.com/displayData');
     var displayData = $firebaseObject(displayRef);

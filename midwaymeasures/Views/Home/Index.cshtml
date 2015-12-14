@@ -13,18 +13,99 @@
 <hr />
 <div class="row">
     <h2 class="col-xs-12">Velocity</h2>
-    <div class=col-md-4 ng-repeat="team in teams">
-        <h3>Team {{ team.name }}: <b>{{ display[team.name].averageVelocity }}</b></h3>
+    <div class=col-md-6 ng-repeat="team in teams">
+        <h3>Team {{ team.name }}: <b>{{ display[team.name].velocityAverage }}</b></h3>
+        <canvas data-ng-attr-velocity="{{ team.name }}"></canvas>
     </div>
 </div>
 <hr />
 <div class="row">
     <h2 class="col-xs-12">Bug Free Work Items</h2>
-    <div class=col-md-4 ng-repeat="team in teams">
-        <h3>Team {{ team.name }}: <b>{{ display[team.name].averageVelocity }}</b></h3>
+    <div class=col-md-6 ng-repeat="team in teams">
+        <h3>Team {{ team.name }}: <b>{{ display[team.name].qualityAverage }}%</b></h3>
+        <canvas data-ng-attr-quality="{{ team.name }}"></canvas>
     </div>
 </div>
 <hr />
+<div class="row">
+    <h2 class="col-xs-12">Iteration Completion</h2>
+    <div class=col-md-6 ng-repeat="team in teams">
+        <h3>Team {{ team.name }}: <b>{{ display[team.name].percentCompleteAverage }}%</b></h3>
+        <canvas data-ng-attr-completion="{{ team.name }}"></canvas>
+    </div>
+</div>
+<hr />
+
+<script>
+    FB('iterations').on('value', function (snapshot) {
+
+        var iterations = snapshot.val(),
+            teamsArray = [],
+            displayData = {
+                iterationEndDates: []
+            };
+
+        Object.keys(iterations).forEach(function (iterationKey) {
+
+            var iterationEndDate = makeDisplayDate(Number(iterationKey));
+            displayData.iterationEndDates.push(iterationEndDate);
+
+            var iteration = iterations[iterationKey];
+            Object.keys(iteration).forEach(function (teamKey) {
+
+                //Make sure to only get the team objects
+                if (typeof iteration[teamKey] === 'object') {
+                    if (teamsArray.indexOf(teamKey) < 0) {
+                        teamsArray.push(teamKey);
+                    }
+                    var teamData = iteration[teamKey];
+                    if (typeof displayData[teamKey] != "object") {
+                        displayData[teamKey] = {
+                            percentCompleteByIteration: [],
+                            velocityByIteration: [],
+                            qualityByIteration: []
+                        };
+                    }
+                    if (typeof teamData.percentComplete != 'undefined') {
+                        displayData[teamKey].percentCompleteByIteration.push(teamData.percentComplete);
+                    }
+                    if (typeof teamData.effort != 'undefined') {
+                        displayData[teamKey].velocityByIteration.push(teamData.effort);
+                    }
+                    if (typeof teamData.defects != 'undefined' && typeof teamData.cards != 'undefined') {
+                        displayData[teamKey].qualityByIteration.push(Math.round((1 - (Object.keys(teamData.defects).length / Object.keys(teamData.cards).length)) * 100));
+                    } else {
+                        displayData[teamKey].qualityByIteration.push(100);
+                    }
+                }
+            });
+        });
+
+        teamsArray.forEach(function (team) {
+            var pcArray = displayData[team].percentCompleteByIteration;
+            displayData[team].percentCompleteAverage = Math.round(average(pcArray));
+            displayData[team].currentProgress = pcArray[pcArray.length - 1];
+
+            var vArray = displayData[team].velocityByIteration;
+            displayData[team].velocityAverage = Math.round(average(vArray));
+
+            var qArray = displayData[team].qualityByIteration;
+            displayData[team].qualityAverage = Math.round(average(qArray));
+
+            //This is a terrible way to do this :(
+            setTimeout(function () {
+                makeChart([qArray], displayData.iterationEndDates, $('[quality=' + team + ']'), {});
+                makeChart([vArray], displayData.iterationEndDates, $('[velocity=' + team + ']'), {});
+                makeChart([pcArray], displayData.iterationEndDates, $('[completion=' + team + ']'), {});
+            }, 1000);
+
+        });
+
+        FB('displayData').update(displayData);
+
+    });
+</script>
+
 @*<div class="row">
         <div class="col-lg-12 result-section">
             <h2>Average Velocity</h2>
