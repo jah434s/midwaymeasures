@@ -375,10 +375,10 @@ FB('cards').limitToLast(1).on('child_added', function (snapshot) {
 });
 
 //Update iterations with doneList Data
-FB('doneLists').limitToLast(1).on('child_added', function(snapshot) {
+FB('doneLists').limitToLast(2).on('child_added', function(snapshot) {
     updateIteration(snapshot.val());
 });
-FB('doneLists').limitToLast(1).on('child_changed', function (snapshot) {
+FB('doneLists').on('child_changed', function (snapshot) {
     updateIteration(snapshot.val());
 });
 
@@ -429,14 +429,14 @@ FB('iterations').on('value', function (snapshot) {
 
     teamsArray.forEach(function (team) {
         var pcArray = displayData[team].percentCompleteByIteration;
-        displayData[team].percentCompleteAverage = Math.round(average(pcArray));
+        displayData[team].percentCompleteAverage = Math.round(average(pcArray.slice(0, -1)));
         displayData[team].currentProgress = pcArray[pcArray.length - 1];
 
         var vArray = displayData[team].velocityByIteration;
-        displayData[team].velocityAverage = Math.round(average(vArray));
+        displayData[team].velocityAverage = Math.round(average(vArray.slice(0, -1)));
 
         var qArray = displayData[team].qualityByIteration;
-        displayData[team].qualityAverage = Math.round(average(qArray));
+        displayData[team].qualityAverage = Math.round(average(qArray.slice(0, -1)));
 
     });
 
@@ -454,7 +454,9 @@ function updateIteration(doneList) {
 
         ref.update({ effortPromised: doneList.effortPromised });
         ref.update({ percentComplete: percentComplete });
-    };
+    } else {
+        ref.update({ percentComplete: 0 });
+    }
 }
 
 function addCardReferences(cardId, card, cardRef) {
@@ -571,7 +573,6 @@ function updateCards() {
         $.when.all(boardRequests).done(function () {
             //A request for a board only returns a certain number of actions, so just in case let's make sure all cards have their action-related data
             $.when.all(cleanUpIncompleteCards(updateData.cards)).done(function () {
-                console.log(updateData);
                 //update the data in the DB
                 FB('doneLists').update(updateData.doneLists, fbCallback);
                 FB('cards').update(updateData.cards, fbCallback);

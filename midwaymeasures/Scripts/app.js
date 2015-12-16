@@ -22,7 +22,7 @@ app.controller('mmCtrl', function ($rootScope, $scope, $firebaseObject, $firebas
         },
         link: function (scope, elem, attrs) {
             scope.$watch('display', function (newValue, oldValue) {
-                makeChart([scope.display[scope.team][attrs.chartData]], scope.display.iterationEndDates, elem, {});
+                makeChart([scope.display[scope.team][attrs.chartData].slice(0, -1)], scope.display.iterationEndDates.slice(0, -1), elem, { bezierCurve: false });
             });
         }
     }
