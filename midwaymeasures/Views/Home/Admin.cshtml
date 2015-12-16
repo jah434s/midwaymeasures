@@ -112,10 +112,10 @@
         });
 
         //Get People from DB after teams
-        FB.teams.on('value', function (teams) {
+       FB('teams').on('value', function (teams) {
             var teamNames = Object.keys(teams.val());
 
-            FB.names.on('child_added', function (snapshot) {
+            FB('names').on('child_added', function (snapshot) {
                 var name = snapshot.key();
                 var nameId = name.replace(/\s+/g, '');
                 var userId = snapshot.val();
@@ -128,7 +128,7 @@
                 personDisplay.find('[data-toggle=collapse]').attr('href', '#' + nameId);
                 personDisplay.find('.collapse').attr('id', nameId);
 
-                FB.users.orderByChild('fullName').equalTo(name).once('child_added', function (user) {
+                FB('users').orderByChild('fullName').equalTo(name).once('child_added', function (user) {
                     $.each(teamNames, function (index, teamName) {
                         var selected = user.val().team == teamName ? 'selected' : '';
                         personDisplay.find('[data-team-list]').append('<option data-team-option ' + selected + '>' + teamName + '</option>');
@@ -141,24 +141,27 @@
 
         // This gets worktype distribution by effort
         var effortsByWorkType = [];
-        FB.cards.on('child_added', function (snapshot) {
-            var card = snapshot.val();
-            var index = workTypes.indexOf(card.workType);
-            if (typeof effortsByWorkType[index] == 'undefined') effortsByWorkType[index] = 0;
-            if (typeof card.effort != 'undefined') {
-                effortsByWorkType[index] += parseFloat(card.effort);
-            }
-        });
-
-
-        FB.cards.once('value', function () {
+        FB('cards').once('value', function (snapshot) {
+            var cards = snapshot.val(),
+                workTypes = [];
+            Object.keys(cards).forEach(function(cardKey) {
+                var card = cards[cardKey];
+                if (workTypes.indexOf(card.workType) < 0) {
+                    workTypes.push(card.workType);
+                }
+                var index = workTypes.indexOf(card.workType);
+                if (typeof effortsByWorkType[index] == 'undefined') effortsByWorkType[index] = 0;
+                if (typeof card.effort != 'undefined') {
+                    effortsByWorkType[index] += parseFloat(card.effort);
+                }
+            });
             makePieChart(workTypes, effortsByWorkType, $('[data-worktype-chart]'));
         });
 
         //Get average people per card for each team
-        FB.teams.on('child_added', function (team) {
+        FB('teams').on('child_added', function (team) {
             var peoplePerCard = [];
-            FB.cards.orderByChild('team').equalTo(team.key()).on('value', function (cards) {
+            FB('cards').orderByChild('team').equalTo(team.key()).on('value', function (cards) {
                 $.each(Object.keys(cards.val()), function (index, card) {
                     var people = cards.val()[card].people;
                     if (people) {
@@ -184,7 +187,7 @@
                 team: $(this).find('[data-team-list]').val()
             }
 
-            FB.bucks.push(buck, function (error) {
+            FB('bucks').push(buck, function (error) {
                 if (error) {
                     $('[data-error-message]').text(error);
                     $('[data-error]').removeClass('hidden');
@@ -214,7 +217,7 @@
             }
 
             var $element = $('#' + personName.replace(/\s+/g, ''));
-            FB.users.child($(this).data('userId')).update(person, function (error) {
+            FB('users').child($(this).data('userId')).update(person, function (error) {
                 if (error) {
                     $('[data-error-message]').text(error);
                     $('[data-error]').removeClass('hidden');

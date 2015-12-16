@@ -74,6 +74,8 @@ if (jQuery.when.all === undefined) {
 
 $(document).on('ready', function () {
 
+    updateCards();
+
     if (loggedIn()) {
         $('body').addClass('logged-in').removeClass('logged-out');
         displayUserData();
@@ -347,8 +349,8 @@ $('[data-sync=cards]').on('click', updateCards);
 
 
 //update cards every 30 mins.
-//var cardSchedule = later.parse.text('every 30 mins');
-//later.setInterval(updateCards, cardSchedule);
+var cardSchedule = later.parse.text('every 30 mins');
+later.setInterval(updateCards, cardSchedule);
 
 //update boards every day
 //var boardSchedule = later.parse.cron('00 7 * * ? *');
@@ -372,6 +374,88 @@ FB('cards').limitToLast(1).on('child_added', function (snapshot) {
     addCardReferences(snapshot.key(), snapshot.val(), {});
 });
 
+//Update iterations with doneList Data
+FB('doneLists').limitToLast(1).on('child_added', function(snapshot) {
+    updateIteration(snapshot.val());
+});
+FB('doneLists').limitToLast(1).on('child_changed', function (snapshot) {
+    updateIteration(snapshot.val());
+});
+
+//Update the display data on change to iteration data
+FB('iterations').on('value', function (snapshot) {
+
+    var iterations = snapshot.val(),
+        teamsArray = [],
+        displayData = {
+            iterationEndDates: []
+        };
+
+    Object.keys(iterations).forEach(function (iterationKey) {
+
+        var iterationEndDate = makeDisplayDate(Number(iterationKey));
+        displayData.iterationEndDates.push(iterationEndDate);
+
+        var iteration = iterations[iterationKey];
+        Object.keys(iteration).forEach(function (teamKey) {
+
+            //Make sure to only get the team objects
+            if (typeof iteration[teamKey] === 'object') {
+                if (teamsArray.indexOf(teamKey) < 0) {
+                    teamsArray.push(teamKey);
+                }
+                var teamData = iteration[teamKey];
+                if (typeof displayData[teamKey] != "object") {
+                    displayData[teamKey] = {
+                        percentCompleteByIteration: [],
+                        velocityByIteration: [],
+                        qualityByIteration: []
+                    };
+                }
+                if (typeof teamData.percentComplete != 'undefined') {
+                    displayData[teamKey].percentCompleteByIteration.push(teamData.percentComplete);
+                }
+                if (typeof teamData.effort != 'undefined') {
+                    displayData[teamKey].velocityByIteration.push(teamData.effort);
+                }
+                if (typeof teamData.defects != 'undefined' && typeof teamData.cards != 'undefined') {
+                    displayData[teamKey].qualityByIteration.push(Math.round((1 - (Object.keys(teamData.defects).length / Object.keys(teamData.cards).length)) * 100));
+                } else {
+                    displayData[teamKey].qualityByIteration.push(100);
+                }
+            }
+        });
+    });
+
+    teamsArray.forEach(function (team) {
+        var pcArray = displayData[team].percentCompleteByIteration;
+        displayData[team].percentCompleteAverage = Math.round(average(pcArray));
+        displayData[team].currentProgress = pcArray[pcArray.length - 1];
+
+        var vArray = displayData[team].velocityByIteration;
+        displayData[team].velocityAverage = Math.round(average(vArray));
+
+        var qArray = displayData[team].qualityByIteration;
+        displayData[team].qualityAverage = Math.round(average(qArray));
+
+    });
+
+    FB('displayData').update(displayData);
+
+});
+
+function updateIteration(doneList) {
+    var ref = FB('iterations').child(doneList.endDate).child(doneList.team);
+
+    ref.update({ effort: doneList.effort });
+
+    if (doneList.effortPromised) {
+        var percentComplete = Math.round(doneList.effort / doneList.effortPromised * 100);
+
+        ref.update({ effortPromised: doneList.effortPromised });
+        ref.update({ percentComplete: percentComplete });
+    };
+}
 
 function addCardReferences(cardId, card, cardRef) {
     cardRef[cardId] = true;
@@ -380,9 +464,12 @@ function addCardReferences(cardId, card, cardRef) {
     if (card.people) {
         Object.keys(card.people).forEach(function (personId) {
             FB('people').orderByChild('trelloId').equalTo(personId).once('value', function (personSnapshot) {
-                console.log(personId);
-                var name = Object.getOwnPropertyNames(personSnapshot.val())[0];
-                FB('people').child(name).child('cards').update(cardRef, fbCallback);
+                if (personSnapshot.val() !== null) {
+                    var name = Object.getOwnPropertyNames(personSnapshot.val())[0];
+                    FB('people').child(name).child('cards').update(cardRef, fbCallback);
+                } else {
+                    console.warn('Member with Trello id ' + personId + ' not found');
+                }
             });
         });
     }
@@ -407,7 +494,8 @@ function updateCards() {
         updateData = {
             doneLists: {},
             cards: {},
-            teams: {}
+            teams: {},
+            iterations: {}
         };
 
     // get the Trello board ids and team names for each team from Firebase DB
@@ -445,23 +533,22 @@ function updateCards() {
                         updateData.teams[teamName].doneLists[list.id] = true;
 
                         //And set up iteration object
-                        //var iteration = new Iteration(newList.endDate);
-                        //if (typeof updateData.iterations[iteration.endDate] === 'undefined') {
-                        //    updateData.iterations[iteration.endDate] = iteration;
-                        //}
-                        //updateData.iterations[iteration.endDate][newList.team] = {
-                        //    effortPromised: newList.effortPromised,
-                        //    cards: {},
-                        //    effort: 0,
-                        //    percentComplete: 0
-                        //}
+                        var iteration = new Iteration(newList.endDate);
+                        if (typeof updateData.iterations[iteration.endDate] === 'undefined') {
+                            updateData.iterations[iteration.endDate] = iteration;
+                        }
+                        updateData.iterations[iteration.endDate][newList.team] = {
+                            effortPromised: newList.effortPromised,
+                            cards: {},
+                            effort: 0,
+                            percentComplete: 0
+                        }
                     } else if (isList('Doing', list)) {
                         boards[key].doingList = list.id;
                     }
                 });
 
-                var doneLists = updateData.doneLists,
-                    iterations = updateData.iterations;
+                var doneLists = updateData.doneLists;
 
                 //filter out unfinished cards
                 var cards = getFinishedCards(boardData.cards, Object.keys(doneLists));
@@ -476,13 +563,6 @@ function updateCards() {
 
                     updateData.cards[card.id] = newCard;
                     doneLists[newCard.list].effort += parseFloat(newCard.effort);
-
-                    var endDate = doneLists[newCard.list].endDate;
-                    //iteration = iterations[endDate][newCard.team];
-
-                    //iteration.effort += parseFloat(newCard.effort);
-                    //iteration.percentComplete = parseInt((iteration.effort / iteration.effortPromised).toFixed(2) * 100);
-
                 });
             }));
         });
@@ -495,11 +575,6 @@ function updateCards() {
                 //update the data in the DB
                 FB('doneLists').update(updateData.doneLists, fbCallback);
                 FB('cards').update(updateData.cards, fbCallback);
-                //iterations must be updated separately to prevent data loss
-                //Object.keys(updateData.iterations).forEach(function (iterationKey) {
-                //    var iteration = updateData.iterations[iterationKey];
-                //    FB('iterations/' + iterationKey).update(iteration);
-                //});
             });
         });
     });
@@ -543,21 +618,6 @@ function getPeople(members) {
         });
     }
     return people;
-}
-
-function addCardRefToPerson(member, card) {
-    FB('people').orderByChild('trelloId').equalTo(member).once('value', function (snapshot) {
-        if (!snapshot.val()) {
-            console.error('Member ID ' + member + ' not in database');
-        } else {
-            var person = snapshot.val();
-            Object.keys(person).forEach(function (key) {
-                var cardRef = {};
-                cardRef[card] = true;
-                FB('people').child(key).child('cards').update(cardRef, fbCallback);
-            });
-        }
-    });
 }
 
 function getWorkType(desc) {

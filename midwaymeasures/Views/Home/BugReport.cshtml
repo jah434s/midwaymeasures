@@ -15,12 +15,15 @@
     </label>
     <fieldset data-bug="people">
         <legend>People Involved</legend>
-
+        <label ng-repeat="person in people">
+            <input type=checkbox data-bug="person"> {{ person.firstName }} {{ person.lastName }} 
+        </label>
     </fieldset>
     <label>
         Team
-        <select data-team-list required>
+        <select required>
             <option></option>
+            <option ng-repeat="team in teams">{{ team.name }}</option>
         </select>
     </label>
     <button type="submit" class="btn btn-primary">Submit Bug Report</button>
@@ -37,10 +40,10 @@
         }
 
         //Get People from DB
-        FB('people').orderByChild('status').equalTo('active').on('child_added', function(snapshot) {
-            var name = snapshot.key();
-            $('[data-bug="people"]').append('<label><input type=checkbox data-bug="person">' + name + '</label>');
-        });
+        //FB('people').orderByChild('status').equalTo('active').on('child_added', function(snapshot) {
+        //    var name = snapshot.key();
+        //    $('[data-bug="people"]').append('<label><input type=checkbox data-bug="person">' + name + '</label>');
+        //});
 
         //Submit defect on form submission
         $('[data-bug=form]').on('submit', function(e) {
@@ -60,7 +63,16 @@
                 var iteration = iterationSnapshot.key();
                 var bug = new Bug(date, desc, people, team, iteration);
                 //Add defect to the DB
-                FB('defects').push(bug, fbCallback);
+                FB('defects').push(bug, function (error) {
+                    if (error) {
+                        $('[data-error-message]').text(error);
+                        $('[data-error]').removeClass('hidden');
+                    } else {
+                        $('[data-success-message]').text('Bullseye Buck submitted.');
+                        $('[data-success]').removeClass('hidden');
+                        $('[data-buck-form]')[0].reset();
+                    }
+                });
             });
         });
 
@@ -106,9 +118,8 @@
                 FB('iterations').orderByChild('endDate').startAt(defect.dateIntroduced).limitToFirst(1).once('child_added', function(iterationSnapshot) {
                     var iteration = iterationSnapshot.key();
                     FB('defects').child(defectKey).update({ iteration: iteration });
-                    var defectRef = {
-                        defectKey: true
-                    }
+                    var defectRef = {};
+                    defectRef[defectKey] = true;
                     FB('iterations').child(iteration).child(defect.team).child('defects').update(defectRef);
                 });
             });
