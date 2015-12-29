@@ -622,7 +622,7 @@ function getPeople(members) {
 }
 
 function getWorkType(desc) {
-    var workTypes = ['CAP', 'DAP', 'OFI', 'CAR', 'SEO', 'BUG', 'Support', 'RAP'],
+    var workTypes = ['CAP', 'DAP', 'OFI', 'CAR', 'SEO', 'BUG', 'Support', 'RAP', 'Refresh', 'Search Relevance'],
             workType;
     workTypes.forEach(function (type) {
         if (desc.indexOf(type) >= 0) {
