@@ -74,9 +74,11 @@ if (jQuery.when.all === undefined) {
 
 $(document).on('ready', function () {
 
-    updateCards();
+    
 
     if (loggedIn()) {
+        updateCards();
+
         $('body').addClass('logged-in').removeClass('logged-out');
         displayUserData();
         if (isAdmin) {
@@ -350,7 +352,7 @@ $('[data-sync=cards]').on('click', updateCards);
 
 //update cards every 30 mins.
 var cardSchedule = later.parse.text('every 30 mins');
-later.setInterval(updateCards, cardSchedule);
+//later.setInterval(updateCards, cardSchedule);
 
 //update boards every day
 //var boardSchedule = later.parse.cron('00 7 * * ? *');
@@ -445,6 +447,9 @@ FB('iterations').on('value', function (snapshot) {
 });
 
 function updateIteration(doneList) {
+
+    FB('iterations').child(doneList.endDate).update({ 'endDate': doneList.endDate });
+
     var ref = FB('iterations').child(doneList.endDate).child(doneList.team);
 
     ref.update({ effort: doneList.effort });
