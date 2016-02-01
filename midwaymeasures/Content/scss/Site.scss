@@ -17,20 +17,9 @@ body {
     white-space: normal;
 }
 
-/* Set width on the form input elements since they're 100% wide by default */
-input,
-select,
-textarea {
-    max-width: 280px;
-}
-
 .navbar {
     background: #eee;
     border-bottom: 10px solid #111458;
-}
-
-label, fieldset {
-    margin-bottom: 2em;
 }
 
 legend {
@@ -92,6 +81,12 @@ h1, h2, h3 {
 .logged-out {
     .right-nav-item.logged-out-content {
         display: block !important;
+    }
+}
+
+.well {
+    h2, h3 {
+        margin-top: 0;
     }
 }
 
@@ -247,5 +242,67 @@ canvas {
         height: 1em;
         vertical-align: middle;
         margin-right: .5em;
+    }
+}
+
+.buck {
+    width: 300px;
+    display: inline-block;
+    vertical-align: top;
+    padding: 1em;
+    margin-right: 2em;
+    margin-bottom: 2em;
+    border: 1px solid green;
+    border-radius: 4px;
+    background: #FAFFF7;
+    position: relative;
+    padding-left: 2.3em;
+
+    &:before {
+        content: '$';
+        position: absolute;
+        left: 8px;
+        top: 1px;
+        font-size: 2em;
+        color: green;
+    }
+
+    &.ng-enter {
+        transform:scale(.2, .2);
+        opacity: 0;
+        transition: .3s ease-out all;
+
+        &.ng-enter-active {
+            opacity: 1;
+            transform:scale(1, 1);
+        }
+    }
+
+    &.ng-leave {
+        transform:scale(1, 1);
+        opacity: 1;
+        transition: .3s ease-out all;
+        &.ng-leave-active {
+            transform:scale(.2, .2);
+            opacity: 0;
+        }
+    }
+
+    &-title {
+        border-bottom: 1px solid #ccc;
+        padding-bottom: .4em;
+        margin: 0 0 .2em;
+    }
+
+    &-desc {
+        margin-top: 1em;
+    }
+
+    &-delete {
+        position: absolute;
+        top: 7px;
+        right: 6px;
+        color: $btn-danger-bg;
+        cursor: pointer;
     }
 }

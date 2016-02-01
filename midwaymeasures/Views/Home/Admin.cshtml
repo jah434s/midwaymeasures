@@ -9,38 +9,6 @@
 </section>
 <section class="row">
     <ul data-admin-list class="admin-list list-unstyled clearfix">
-        <li class="admin-list-item col-md-8">
-            <a data-toggle="collapse" href="#add-buck" aria-expanded="false" aria-controls="add-buck" class="btn btn-default admin-nav">
-                <i class="glyphicon glyphicon-plus btn-icon"></i>Add a Bullseye Buck
-            </a>
-            <div class="collapse" id="add-buck">
-                <div class="well">
-                    <form data-buck-form>
-                        <label>
-                            Team Member
-                            <select data-buck-people>
-                                <option></option>
-                            </select>
-                        </label>
-                        <label>
-                            Brief Description
-                            <textarea data-buck-description required></textarea>
-                        </label>
-                        <label>
-                            Team
-                            <select data-team-list required>
-                                <option></option>
-                            </select>
-                        </label>
-                        <label>
-                            Date
-                            <input type="date" data-buck-date required />
-                        </label>
-                        <button class="btn btn-primary" type="submit">Add Bullseye Buck</button>
-                    </form>
-                </div>
-            </div>
-        </li>
         <li data-admin-list-item class="admin-list-item col-md-8">
             <a data-toggle="collapse" href="#manage-people" aria-expanded="false" aria-controls="manage-people" class="btn btn-default admin-nav">
                 <i class="glyphicon glyphicon-plus btn-icon"></i>Team Members
@@ -174,28 +142,6 @@
                     return a + b;
                 });
                 $('[data-people-per-card-list]').append('<dt><h3 class=result-item-title>' + team.key() + '</h3></dt><dd class=result-item-result>' + (totalPeople / peoplePerCard.length).toFixed(2) + '</dd>');
-            });
-        });
-
-        //Handle Bullseye Buck form submission
-        $('[data-buck-form]').on('submit', function (e) {
-            e.preventDefault();
-            var buck = {
-                time: Date.parse($('[data-buck-date]').val()),
-                description: $('[data-buck-description]').val(),
-                person: $('[data-buck-people]').val(),
-                team: $(this).find('[data-team-list]').val()
-            }
-
-            FB('bullseyeBucks').push(buck, function (error) {
-                if (error) {
-                    $('[data-error-message]').text(error);
-                    $('[data-error]').removeClass('hidden');
-                } else {
-                    $('[data-success-message]').text('Bullseye Buck submitted.');
-                    $('[data-success]').removeClass('hidden');
-                    $('[data-buck-form]')[0].reset();
-                }
             });
         });
 

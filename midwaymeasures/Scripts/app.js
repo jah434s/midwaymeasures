@@ -1,4 +1,4 @@
-﻿var app = angular.module('midwayMeasures', ['firebase']);
+﻿var app = angular.module('midwayMeasures', ['firebase', 'ngAnimate']);
 
 app.controller('mmCtrl', function ($rootScope, $scope, $firebaseObject, $firebaseArray) {
 
@@ -12,6 +12,9 @@ app.controller('mmCtrl', function ($rootScope, $scope, $firebaseObject, $firebas
 
     var peopleRef = new Firebase('https://midway-measures.firebaseio.com/people').orderByChild('status').equalTo('active');
     $scope.people = $firebaseArray(peopleRef);
+
+    var bucksRef = new Firebase('https://midway-measures.firebaseio.com/bullseyeBucks').orderByChild('priority').limitToFirst(30);
+    $scope.bucks = $firebaseArray(bucksRef);
 })
 .directive('trendChart', function () {
     return {

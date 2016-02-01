@@ -23,6 +23,11 @@ namespace midwaymeasures.Controllers
             return View();
         }
 
+        public ActionResult Bucks()
+        {
+            return View();
+        }
+
         public ActionResult Me()
         {
             return View();

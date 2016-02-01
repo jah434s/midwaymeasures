@@ -20,6 +20,7 @@
     <IISExpressAnonymousAuthentication />
     <IISExpressWindowsAuthentication />
     <IISExpressUseClassicPipelineMode />
+    <UseGlobalApplicationHostFile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -121,8 +122,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Content\css\bootstrap.css" />
-    <Content Include="Content\css\Site.css" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />
@@ -196,10 +195,9 @@
     <Content Include="Content\scss\bootstrap\_variables.scss" />
     <Content Include="Content\scss\bootstrap\_wells.scss" />
     <Content Include="Content\scss\bootstrap.scss" />
-    <Content Include="Content\css\bootstrap.css.map" />
-    <Content Include="Content\css\Site.css.map" />
     <None Include="Content\scss\Site.scss" />
     <Content Include="gulpfile.js" />
+    <Content Include="Scripts\angular-animate.js" />
     <Content Include="Scripts\angularfire.min.js" />
     <Content Include="Scripts\app.js" />
     <Content Include="Scripts\bootstrap.js" />
@@ -248,9 +246,11 @@
     <Content Include="Views\Home\Me.cshtml" />
     <Content Include="Views\Home\SyncBoards.cshtml" />
     <Content Include="Views\Home\SyncCards.cshtml" />
+    <Content Include="Views\Home\Bucks.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Content\css\" />
     <Folder Include="Models\" />
   </ItemGroup>
   <ItemGroup>

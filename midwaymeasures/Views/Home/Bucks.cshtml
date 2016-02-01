@@ -1,0 +1,101 @@
+﻿
+@{
+    ViewBag.Title = "Bullseye Bucks";
+}
+
+<script>
+    var updateBucks = function () {
+        FB('bullseyeBucks').on('child_added', function (snapshot) {
+            var buck = snapshot.val(),
+                key = snapshot.key();
+
+            buck.readableDate = new moment(buck.time).format('MMM DD, YYYY');
+            //console.log(buck.readableDate);
+            FB('bullseyeBucks').child(key).update({readableDate: buck.readableDate});
+        })
+    }
+</script>
+
+<h2>Bucks</h2>
+<div class="row">
+    <div class="col-md-3 well">
+        <h3>Add a Buck</h3>
+        <form data-buck="form">
+            <div class="form-group">
+                <label for="people">
+                    Team Member
+                </label>
+                <select data-buck="person" required class="form-control" id="people">
+                    <option></option>
+                    <option ng-repeat="person in people">{{person.firstName}} {{person.lastName}}</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="description">Brief Description</label>
+                <textarea id="description" class="form-control" data-buck="description" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="team">Team</label>
+                <select id="team" class="form-control" data-buck="team" required>
+                    <option></option>
+                    <option ng-repeat="team in teams">{{team.name}}</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="date">Date Given</label>
+                <input id="date" class="form-control" type="date" data-buck="time" value="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary btn-block" type="submit">Add Bullseye Buck</button>
+            </div>
+            
+        </form>
+    </div>
+    <div class="col-md-8 col-md-offset-1">
+        <ul class="list-unstyled">
+            <li class="buck" ng-repeat="buck in bucks" ng-animate="{enter: 'animate-enter', leave: 'animate-leave'}">
+                <h4 class="buck-title">{{buck.person}}</h4>
+                <small class="buck-date">{{buck.readableDate}}</small>
+                <p class="buck-desc">{{buck.description}}</p>
+                <i data-buck="delete" data-key="{{buck.$id}}" class="glyphicon glyphicon-remove buck-delete" title="Delete Buck"></i>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    var Buck = function () {
+        this.person = $('[data-buck=person] :selected').text();
+        this.description = $('[data-buck=description]').val();
+        this.team = $('[data-buck=team] :selected').text();
+        this.readableDate = new moment($('[data-buck=time]').val()).format('MMM DD, YYYY');
+        this.time = Date.parse(this.readableDate);
+        this.priority = this.time * -1;
+    }
+
+    $('[data-buck=form]').on('submit', function (e) {
+        e.preventDefault();
+        var buck = new Buck();
+        FB('bullseyeBucks').push(buck, function (error) {
+            if (error) {
+                $('[data-error-message]').text(error);
+                $('[data-error]').removeClass('hidden');
+            } else {
+                $('[data-buck=form]')[0].reset();
+            }
+        });
+    });
+
+    $('body').on('click', '[data-buck=delete]', function () {
+        var key = $(this).data('key');
+        FB('bullseyeBucks').child(key).remove(function (error) {
+            if (error) {
+                $('[data-error-message]').text(error);
+                $('[data-error]').removeClass('hidden');
+            }
+        });
+    });
+
+    $('[data-buck=time]').val(new moment(Date.now()).format('YYYY-MM-DD'));
+
+</script>

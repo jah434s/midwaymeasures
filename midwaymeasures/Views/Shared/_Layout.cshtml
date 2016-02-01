@@ -13,6 +13,8 @@
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular.min.js"></script>
     <script src="https://cdn.firebase.com/js/client/2.2.4/firebase.js"></script>
     @Scripts.Render("~/Scripts/angularfire.min.js")
+    @Scripts.Render("~/Scripts/angular-animate.js")
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.11.1/moment.min.js"></script>
     @Scripts.Render("~/Scripts/ChartJS/Chart.js")
     @Scripts.Render("~/Scripts/ChartJS/Chart.Line.js")
     @Scripts.Render("~/Scripts/Later.min.js")
@@ -39,6 +41,7 @@
             <div class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
                     <li class="top-nav-item">@Html.ActionLink("Bug Report", "BugReport", "Home")</li>
+                    <li class="top-nav-item">@Html.ActionLink("Bullseye Bucks", "Bucks", "Home")</li>
                     <li class="top-nav-item admin-content">@Html.ActionLink("Admin", "Admin", "Home")</li>
                     @*<li>@Html.ActionLink("Contact", "Contact", "Home")</li>*@
                 </ul>
