@@ -187,7 +187,7 @@
                 team: $(this).find('[data-team-list]').val()
             }
 
-            FB('bucks').push(buck, function (error) {
+            FB('bullseyeBucks').push(buck, function (error) {
                 if (error) {
                     $('[data-error-message]').text(error);
                     $('[data-error]').removeClass('hidden');
