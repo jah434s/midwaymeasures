@@ -337,7 +337,7 @@ function makePieChart(labelsArray, dataArray, container) {
 
 var fbCallback = function (error) {
     if (error) {
-        alert(error);
+        console.error(error);
     }
 }
 
