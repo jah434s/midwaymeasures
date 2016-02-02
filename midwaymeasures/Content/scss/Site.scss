@@ -32,6 +32,7 @@ label {
     input[type=text], input[type=password], input[type=email], select, textarea, input[type=date] {
         display: block;
     }
+
     display: block;
 }
 
@@ -127,7 +128,7 @@ h1, h2, h3 {
 
 .admin-nav {
     font-size: 1.6em;
-        margin-bottom: .5em;
+    margin-bottom: .5em;
 }
 
 .admin-list-item {
@@ -143,6 +144,7 @@ h1, h2, h3 {
     &:first-child .admin-person {
         border-top-width: 0;
     }
+
     .well {
         background: white;
     }
@@ -163,6 +165,7 @@ h1, h2, h3 {
     padding: .6em 0;
     display: block;
     cursor: pointer;
+
     &:hover {
         text-decoration: none;
         background: #efefef;
@@ -199,6 +202,7 @@ h1, h2, h3 {
     padding: 1em;
     border-radius: 10px;
     margin-right: 3em;
+
     canvas, ul {
         margin-top: 1em;
     }
@@ -232,12 +236,14 @@ canvas {
     list-style-type: none;
     display: inline-block;
     vertical-align: top;
+
     li {
         margin-bottom: .5em;
         font-size: 1.2em;
     }
+
     span {
-        display:inline-block;
+        display: inline-block;
         width: 1em;
         height: 1em;
         vertical-align: middle;
@@ -245,45 +251,45 @@ canvas {
     }
 }
 
-.buck {
+.record {
     width: 300px;
     display: inline-block;
     vertical-align: top;
     padding: 1em;
     margin-right: 2em;
     margin-bottom: 2em;
-    border: 1px solid green;
+    border: 1px solid;
     border-radius: 4px;
-    background: #FAFFF7;
     position: relative;
     padding-left: 2.3em;
 
     &:before {
-        content: '$';
+        content: '';
         position: absolute;
-        left: 8px;
-        top: 1px;
-        font-size: 2em;
-        color: green;
+        left: 6px;
+        top: 4px;
+        font-size: 1.7em;
+        font-family: 'FontAwesome';
     }
 
     &.ng-enter {
-        transform:scale(.2, .2);
+        transform: scale(.2, .2);
         opacity: 0;
         transition: .3s ease-out all;
 
         &.ng-enter-active {
             opacity: 1;
-            transform:scale(1, 1);
+            transform: scale(1, 1);
         }
     }
 
     &.ng-leave {
-        transform:scale(1, 1);
+        transform: scale(1, 1);
         opacity: 1;
         transition: .3s ease-out all;
+
         &.ng-leave-active {
-            transform:scale(.2, .2);
+            transform: scale(.2, .2);
             opacity: 0;
         }
     }
@@ -292,6 +298,7 @@ canvas {
         border-bottom: 1px solid #ccc;
         padding-bottom: .4em;
         margin: 0 0 .2em;
+        text-transform: capitalize;
     }
 
     &-desc {
@@ -304,5 +311,23 @@ canvas {
         right: 6px;
         color: $btn-danger-bg;
         cursor: pointer;
+    }
+}
+
+.buck {
+    background: #FAFFF7;
+    border-color: $btn-success-border;
+    &:before {
+        color: $btn-success-bg;
+        content: '\f155';
+    }
+}
+
+.bug {
+    background: #fafafa;
+    border-color: #ccc;
+    &:before {
+        color: #666;
+        content: "\f188";
     }
 }

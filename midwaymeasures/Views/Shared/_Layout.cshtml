@@ -6,6 +6,8 @@
     <title>@ViewBag.Title | Web Production Measures</title>
     <link rel="stylesheet" href="/Content/css/bootstrap.css"/>
     <link rel="stylesheet" href="/Content/css/Site.css" />
+    @RenderSection("styles", required: false)
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
     @Scripts.Render("~/bundles/modernizr")
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")

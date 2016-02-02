@@ -2,51 +2,80 @@
     ViewBag.Title = "Bug Report";
 }
 
-<h2>@ViewBag.Title</h2>
+@section styles {
+    <style>
+        @@media(min-width: 1200px) {
+            .container {
+                width: 90%;
+                max-width: 1600px;
+            }
+        }
+    </style>
+}
 
-<form data-bug="form">
-    <label>
-        Date Introduced (approximate)
-        <input type="date" data-bug="date" required />
-    </label>
-    <label>
-        Brief Description
-        <textarea data-bug="description" required></textarea>
-    </label>
-    <fieldset data-bug="people">
-        <legend>People Involved</legend>
-        <label ng-repeat="person in people">
-            <input type=checkbox data-bug="person"> {{ person.firstName }} {{ person.lastName }} 
-        </label>
-    </fieldset>
-    <label>
-        Team
-        <select required data-teams>
-            <option></option>
-            <option ng-repeat="team in teams">{{ team.name }}</option>
-        </select>
-    </label>
-    <button type="submit" class="btn btn-primary">Submit Bug Report</button>
-</form>
+<h2>@ViewBag.Title</h2>
+<div class="row">
+    <div class="col-md-3 well">
+        <h3>Add a Bug</h3>
+        <form data-bug="form">
+            <div class="form-group">
+                <label for="date">Date Introduced (approximate)</label>
+                <input id="date" type="date" data-bug="date" class="form-control" required />
+            </div>
+            <div class="form-group">
+                <label for="desc">Brief Description</label>
+                <textarea id="desc" data-bug="description" class="form-control" required></textarea>
+            </div>
+            <fieldset data-bug="people" class="form-group">
+                <legend>Participants</legend>
+                <label ng-repeat="person in people">
+                    <input type=checkbox data-bug="person"> {{ person.firstName }} {{ person.lastName }}
+                </label>
+            </fieldset>
+            <div class="form-group">
+                <label for="team">Team</label>
+                <select id="team" required data-bug="team">
+                    <option></option>
+                    <option ng-repeat="team in teams">{{ team.name }}</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary btn-block">Add Bug</button>
+            </div>  
+        </form>
+    </div>
+    <div class="col-md-8 col-md-offset-1">
+        <ul class="list-unstyled">
+            <li class="record bug" ng-repeat="bug in bugs" ng-animate="{enter: 'animate-enter', leave: 'animate-leave'}">
+                <h4 class="record-title">Team {{bug.team}}</h4>
+                <small class="record-date">Introduced: {{bug.readableDateIntroduced}}</small>
+                <p class="record-desc">{{bug.description}}</p>
+                <i data-bug="delete" data-key="{{bug.$id}}" class="fa fa-times record-delete" title="Delete Bug"></i>
+            </li>
+        </ul>
+    </div>
+</div>
 
 @section scripts {
     <script>
         var Bug = function(date, desc, people, team, iteration) {
             this.dateIntroduced = date;
+            this.readableDateIntroduced = new moment(this.dateIntroduced).format('MMM DD, YYYY');
             this.description = desc;
             this.people = people;
             this.team = team;
             this.iteration = iteration;
+            this.dateCaptured = Date.now();
+            this.order = this.dateCaptured * -1;
         }
 
         //Submit defect on form submission
         $('[data-bug=form]').on('submit', function(e) {
             e.preventDefault();
-            console.log('submit');
             var date = Date.parse($('[data-bug=date]').val()),
                 desc = $('[data-bug=description]').val(),
                 people = {},
-                team = $(this).find('[data-teams]').val();
+                team = $(this).find('[data-bug=team]').val();
 
             $('[data-bug=person]:checked').each(function(index, checkbox) {
                 var person = $(checkbox).parents('label').first().text().trim();
@@ -64,67 +93,68 @@
                         $('[data-error-message]').text(error);
                         $('[data-error]').removeClass('hidden');
                     } else {
-                        $('[data-success-message]').text('Bullseye Buck submitted.');
-                        $('[data-success]').removeClass('hidden');
                         $('[data-bug=form]')[0].reset();
                     }
                 });
             });
         });
 
-        if (loggedIn()) {
 
-            FB('defects').limitToLast(1).on('child_added', function (snapshot) {
-                var addedBug = snapshot.val(),
-                    bugRef = {};
-                bugRef[snapshot.key()] = true;
+        FB('defects').limitToLast(1).on('child_added', function (snapshot) {
+            var addedBug = snapshot.val(),
+                bugRef = {};
+            bugRef[snapshot.key()] = true;
 
-                //Add reference to each person
-                Object.keys(addedBug.people).forEach(function (name) {
-                    FB('people').child(name).child('defects').update(bugRef, fbCallback);
-                });
-
-                //Add reference to team
-                FB('teams').child(addedBug.team).child('defects').update(bugRef, fbCallback);
-
-                //Add reference to iteration
-                FB('iterations').child(addedBug.iteration).child(addedBug.team).child('defects').update(bugRef, fbCallback);
-
+            //Add reference to each person
+            Object.keys(addedBug.people).forEach(function (name) {
+                FB('people').child(name).child('defects').update(bugRef, fbCallback);
             });
 
-            FB('defects').on('child_removed', function (snapshot) {
-                var bugKey = snapshot.key(),
-                    removedBug = snapshot.val();
+            //Add reference to team
+            FB('teams').child(addedBug.team).child('defects').update(bugRef, fbCallback);
 
-                //Remove object from each person
-                Object.keys(removedBug.people).forEach(function (name) {
-                    FB('people').child(name).child('defects').child(bugKey).remove();
-                });
+            //Add reference to iteration
+            FB('iterations').child(addedBug.iteration).child(addedBug.team).child('defects').update(bugRef, fbCallback);
 
-                //Remove reference from team object
-                FB('teams').child(removedBug.team).child('defects').child(bugKey).remove();
+        });
 
-                //Remove reference from iteration object
-                FB('iterations').child(removedBug.iteration).child(removedBug.team).child('defects').child(bugKey).remove();
+        FB('defects').on('child_removed', function (snapshot) {
+            var bugKey = snapshot.key(),
+                removedBug = snapshot.val();
+
+            //Remove object from each person
+            Object.keys(removedBug.people).forEach(function (name) {
+                FB('people').child(name).child('defects').child(bugKey).remove();
             });
 
-            function updateDefects() {
-                FB('defects').on('child_added', function (snapshot) {
-                    var defect = snapshot.val(),
-                        defectKey = snapshot.key();
+            //Remove reference from team object
+            FB('teams').child(removedBug.team).child('defects').child(bugKey).remove();
 
-                    FB('iterations').orderByChild('endDate').startAt(defect.dateIntroduced).limitToFirst(1).once('child_added', function (iterationSnapshot) {
-                        var iteration = iterationSnapshot.key();
-                        FB('defects').child(defectKey).update({ iteration: iteration });
-                        var defectRef = {};
-                        defectRef[defectKey] = true;
-                        FB('iterations').child(iteration).child(defect.team).child('defects').update(defectRef);
-                    });
+            //Remove reference from iteration object
+            FB('iterations').child(removedBug.iteration).child(removedBug.team).child('defects').child(bugKey).remove();
+        });
+
+        function updateDefects() {
+            FB('defects').on('child_added', function (snapshot) {
+                var defect = snapshot.val(),
+                    defectKey = snapshot.key();
+
+                FB('iterations').orderByChild('endDate').startAt(defect.dateIntroduced).limitToFirst(1).once('child_added', function (iterationSnapshot) {
+                    var iteration = iterationSnapshot.key();
+                    FB('defects').child(defectKey).update({ iteration: iteration });
+                    var defectRef = {};
+                    defectRef[defectKey] = true;
+                    FB('iterations').child(iteration).child(defect.team).child('defects').update(defectRef);
                 });
-            }
+            });
         }
 
-        //TODO handle updating of references on child_changed (including deletion of appropriate references)
+        $('body').on('click', '[data-bug=delete]', function () {
+            var key = $(this).data('key');
+            FB('defects').child(key).remove();
+        });
+
+        //TODO handle updating of references on child_changed (edit of existing record) (including deletion of appropriate references)
 
     </script>
 }

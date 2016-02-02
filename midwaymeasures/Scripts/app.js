@@ -15,6 +15,9 @@ app.controller('mmCtrl', function ($rootScope, $scope, $firebaseObject, $firebas
 
     var bucksRef = new Firebase('https://midway-measures.firebaseio.com/bullseyeBucks').orderByChild('priority').limitToFirst(30);
     $scope.bucks = $firebaseArray(bucksRef);
+
+    var bugsRef = new Firebase('https://midway-measures.firebaseio.com/defects').orderByChild('order').limitToFirst(30);
+    $scope.bugs = $firebaseArray(bugsRef);
 })
 .directive('trendChart', function () {
     return {

@@ -3,20 +3,15 @@
     ViewBag.Title = "Bullseye Bucks";
 }
 
-<script>
-    var updateBucks = function () {
-        FB('bullseyeBucks').on('child_added', function (snapshot) {
-            var buck = snapshot.val(),
-                key = snapshot.key();
+@section styles {
+    <style>
+        .container {
+            width: 1600px;
+        }
+    </style>    
+}
 
-            buck.readableDate = new moment(buck.time).format('MMM DD, YYYY');
-            //console.log(buck.readableDate);
-            FB('bullseyeBucks').child(key).update({readableDate: buck.readableDate});
-        })
-    }
-</script>
-
-<h2>Bucks</h2>
+<h2>@ViewBag.Title</h2>
 <div class="row">
     <div class="col-md-3 well">
         <h3>Add a Buck</h3>
@@ -48,54 +43,57 @@
             <div class="form-group">
                 <button class="btn btn-primary btn-block" type="submit">Add Bullseye Buck</button>
             </div>
-            
+
         </form>
     </div>
     <div class="col-md-8 col-md-offset-1">
         <ul class="list-unstyled">
-            <li class="buck" ng-repeat="buck in bucks" ng-animate="{enter: 'animate-enter', leave: 'animate-leave'}">
-                <h4 class="buck-title">{{buck.person}}</h4>
-                <small class="buck-date">{{buck.readableDate}}</small>
-                <p class="buck-desc">{{buck.description}}</p>
-                <i data-buck="delete" data-key="{{buck.$id}}" class="glyphicon glyphicon-remove buck-delete" title="Delete Buck"></i>
+            <li class="record buck" ng-repeat="buck in bucks" ng-animate="{enter: 'animate-enter', leave: 'animate-leave'}">
+                <h4 class="record-title">{{buck.person}}</h4>
+                <small class="record-date">{{buck.readableDate}}</small>
+                <p class="record-desc">{{buck.description}}</p>
+                <i data-buck="delete" data-key="{{buck.$id}}" class="fa fa-times record-delete" title="Delete Buck"></i>
             </li>
         </ul>
     </div>
 </div>
 
-<script>
-    var Buck = function () {
-        this.person = $('[data-buck=person] :selected').text();
-        this.description = $('[data-buck=description]').val();
-        this.team = $('[data-buck=team] :selected').text();
-        this.readableDate = new moment($('[data-buck=time]').val()).format('MMM DD, YYYY');
-        this.time = Date.parse(this.readableDate);
-        this.priority = this.time * -1;
-    }
 
-    $('[data-buck=form]').on('submit', function (e) {
-        e.preventDefault();
-        var buck = new Buck();
-        FB('bullseyeBucks').push(buck, function (error) {
-            if (error) {
-                $('[data-error-message]').text(error);
-                $('[data-error]').removeClass('hidden');
-            } else {
-                $('[data-buck=form]')[0].reset();
-            }
+@section scripts {
+    <script>
+        var Buck = function () {
+            this.person = $('[data-buck=person] :selected').text();
+            this.description = $('[data-buck=description]').val();
+            this.team = $('[data-buck=team] :selected').text();
+            this.readableDate = new moment($('[data-buck=time]').val()).format('MMM DD, YYYY');
+            this.time = Date.parse(this.readableDate);
+            this.priority = this.time * -1;
+        }
+
+        $('[data-buck=form]').on('submit', function (e) {
+            e.preventDefault();
+            var buck = new Buck();
+            FB('bullseyeBucks').push(buck, function (error) {
+                if (error) {
+                    $('[data-error-message]').text(error);
+                    $('[data-error]').removeClass('hidden');
+                } else {
+                    $('[data-buck=form]')[0].reset();
+                }
+            });
         });
-    });
 
-    $('body').on('click', '[data-buck=delete]', function () {
-        var key = $(this).data('key');
-        FB('bullseyeBucks').child(key).remove(function (error) {
-            if (error) {
-                $('[data-error-message]').text(error);
-                $('[data-error]').removeClass('hidden');
-            }
+        $('body').on('click', '[data-buck=delete]', function () {
+            var key = $(this).data('key');
+            FB('bullseyeBucks').child(key).remove(function (error) {
+                if (error) {
+                    $('[data-error-message]').text(error);
+                    $('[data-error]').removeClass('hidden');
+                }
+            });
         });
-    });
 
-    $('[data-buck=time]').val(new moment(Date.now()).format('YYYY-MM-DD'));
+        $('[data-buck=time]').val(new moment(Date.now()).format('YYYY-MM-DD'));
 
-</script>
+    </script>
+}
