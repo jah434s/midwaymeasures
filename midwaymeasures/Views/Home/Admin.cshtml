@@ -1,118 +1,82 @@
 ﻿@{
     ViewBag.Title = "Admin";
 }
-<section class="row">
-    <h2 class="pull-left">@ViewBag.Title</h2>
 
-    <button type="button" class="btn btn-success sync-button" data-sync="boards"><i class="glyphicon glyphicon-refresh"></i>Sync Trello Boards</button>
-    <button type="button" class="btn btn-success sync-button" data-sync="cards"><i class="glyphicon glyphicon-refresh"></i>Sync Trello Cards</button>
-</section>
-<section class="row">
-    <ul data-admin-list class="admin-list list-unstyled clearfix">
-        <li data-admin-list-item class="admin-list-item col-md-8">
-            <a data-toggle="collapse" href="#manage-people" aria-expanded="false" aria-controls="manage-people" class="btn btn-default admin-nav">
-                <i class="glyphicon glyphicon-plus btn-icon"></i>Team Members
-            </a>
-            <div class="collapse" id="manage-people">
-                <div class="well people-container">
-                    <ul data-admin-people-list class="list-unstyled"></ul>
-                </div>
-            </div>
-        </li>
-    </ul>
-</section>
+<h2>@ViewBag.Title</h2>
 
 <section class="row">
-    <div class="col-xs-5 result-section">
-        <h2>Work Type Distribution</h2>
-        <ul class="list-unstyled clearfix">
-            <li class="result-item" data-result-container>
-                <h3 data-team class="result-item-title">Web Production</h3>
-                @*<strong data-result class="result-item-value"></strong>*@
-                <canvas data-worktype-chart width="220" height="220"></canvas>
+    <div class="col-md-3 well">
+        <ul class="list-unstyled" id="peopleList">
+            <li ng-repeat="person in people" class="admin-person-list-item">
+                <a data-toggle="collapse" data-parent="#peopleList" href="[data-id='{{person.firstName}}{{person.lastName}}']" class="admin-person">
+                   {{person.firstName}} {{person.lastName}}
+                </a>
+                <form class="collapse" data-id="{{person.firstName}}{{person.lastName}}" ng-submit="people.$save(person)">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" class="form-control" ng-model="person.firstName" />
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" class="form-control" ng-model="person.lastName" />
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="text" class="form-control" ng-model="person.email" />
+                    </div>
+                    <div class="form-group">
+                        <label>Trello ID</label>
+                        <input type="text" class="form-control" ng-model="person.trelloId" />
+                    </div>
+                    <div class="form-group">
+                        <label>Team</label>
+                        <select class="form-control" ng-model="person.team">
+                            <option ng-repeat="team in teams" value="{{team.name}}">{{team.name}}</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select class="form-control" ng-model="person.status">
+                            <option value="active">Active</option>
+                            <option value="active">Inactive</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Submit</button>
+                </form>
             </li>
         </ul>
     </div>
-    <div class="col-xs-4 result-section">
-        <h2>People Per Card</h2>
-        <dl data-people-per-card-list class="result-item"></dl>
+    <div class="col-md-8 col-md-offset-1">
+        <section class="row">
+            <div class="col-xs-6 result-section">
+                <h2>Work Type Distribution</h2>
+                <ul class="list-unstyled clearfix">
+                    <li class="result-item" data-result-container>
+                        <h3 data-team class="result-item-title">Web Production</h3>
+                        @*<strong data-result class="result-item-value"></strong>*@
+                        <canvas data-worktype-chart width="220" height="220"></canvas>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-xs-6 result-section">
+                <h2>People Per Card</h2>
+                <dl data-people-per-card-list class="result-item"></dl>
+            </div>
+        </section>
+
     </div>
 </section>
-
-<template data-template="person">
-    <li data-admin-person class="admin-person-list-item">
-        <a data-toggle="collapse" class="admin-person" data-person-name>
-            <i class="glyphicon glyphicon-edit admin-person-edit"></i>
-        </a>
-
-        <form class="collapse well" data-person-form>
-            <fieldset>
-                <legend>Status</legend>
-                <label class="status-option">
-                    <input type="radio" name="status" data-status="active" />
-                    Active
-                </label>
-                <label class="status-option">
-                    <input type="radio" name="status" data-status="inactive" />
-                    Inactive
-                </label>
-            </fieldset>
-
-            <label>
-                Team
-                <select data-team-list>
-                    <option></option>
-                </select>
-            </label>
-            <button class="btn btn-primary" type="submit">Update</button>
-        </form>
-    </li>
-</template>
 
 
 @section scripts {
     <script>
-
-        $('[data-admin-list-item]').on('click', '[data-toggle=collapse]', function (e) {
-            e.preventDefault();
-            var target = $(e.target).attr('href');
-            $(target).collapse('toggle');
-        });
-
-        //Get People from DB after teams
-       FB('teams').on('value', function (teams) {
-            var teamNames = Object.keys(teams.val());
-
-            FB('names').on('child_added', function (snapshot) {
-                var name = snapshot.key();
-                var nameId = name.replace(/\s+/g, '');
-                var userId = snapshot.val();
-
-                $('[data-buck-people]').append('<option data-buck-person>' + name + '</option>');
-
-                var personDisplay = $($('[data-template=person]').html().trim());
-                personDisplay.find('[data-person-form]').data('userId', userId);
-                personDisplay.find('[data-person-name]').append(name);
-                personDisplay.find('[data-toggle=collapse]').attr('href', '#' + nameId);
-                personDisplay.find('.collapse').attr('id', nameId);
-
-                FB('users').orderByChild('fullName').equalTo(name).once('child_added', function (user) {
-                    $.each(teamNames, function (index, teamName) {
-                        var selected = user.val().team == teamName ? 'selected' : '';
-                        personDisplay.find('[data-team-list]').append('<option data-team-option ' + selected + '>' + teamName + '</option>');
-                    });
-                    personDisplay.find('[data-status=' + user.val().status + ']').prop('checked', true);
-                    $('[data-admin-people-list]').append(personDisplay);
-                });
-            });
-        });
 
         // This gets worktype distribution by effort
         var effortsByWorkType = [];
         FB('cards').once('value', function (snapshot) {
             var cards = snapshot.val(),
                 workTypes = [];
-            Object.keys(cards).forEach(function(cardKey) {
+            Object.keys(cards).forEach(function (cardKey) {
                 var card = cards[cardKey];
                 if (workTypes.indexOf(card.workType) < 0) {
                     workTypes.push(card.workType);
@@ -142,36 +106,6 @@
                     return a + b;
                 });
                 $('[data-people-per-card-list]').append('<dt><h3 class=result-item-title>' + team.key() + '</h3></dt><dd class=result-item-result>' + (totalPeople / peoplePerCard.length).toFixed(2) + '</dd>');
-            });
-        });
-
-        //Handle update team member form submission
-        $('[data-admin-people-list]').on('submit', '[data-person-form]', function (e) {
-            e.preventDefault();
-            var person = {
-                status: $(this).find('[data-status]:checked').data('status'),
-                team: $(this).find('[data-team-option]:selected').val()
-            }
-            var personName = $(this).prev('[data-person-name]').text().trim();
-            if (person.status == 'inactive') {
-                //remove team from user record
-                person.team = null;
-                //remove name/userid from names list
-                var obj = {};
-                obj[personName] = null;
-                FB.names.update(obj, fbCallback);
-            }
-
-            var $element = $('#' + personName.replace(/\s+/g, ''));
-            FB('users').child($(this).data('userId')).update(person, function (error) {
-                if (error) {
-                    $('[data-error-message]').text(error);
-                    $('[data-error]').removeClass('hidden');
-                } else {
-                    $('[data-success-message]').text(personName + "'s information has been updated.");
-                    $('[data-success]').removeClass('hidden');
-                    $element.collapse('toggle');
-                }
             });
         });
 

@@ -74,8 +74,6 @@ if (jQuery.when.all === undefined) {
 
 $(document).on('ready', function () {
 
-    
-
     if (loggedIn()) {
         updateCards();
 
@@ -146,18 +144,6 @@ $(document).on('ready', function () {
             }
         });
     });
-
-    $('[data-edit-toggle]').on('click', function () {
-        $(this).toggleClass('is-open');
-        $(this).next('[data-edit-section]').toggleClass('is-visible');
-    });
-
-    //Get Teams from DB
-    FB('teams').on('child_added', function (snapshot) {
-        var team = snapshot.key();
-        $('[data-team-list]').append('<option data-buck-team data-fb-field="team">' + team + '</option>');
-    });
-
 });
 
 function loggedIn() {
