@@ -358,7 +358,8 @@ FB('cards').on('child_changed', function (snapshot) {
 });
 
 //Every time a new card is added, add appropriate references to other objects
-FB('cards').limitToLast(1).on('child_added', function (snapshot) {
+FB('cards').limitToLast(20).on('child_added', function (snapshot) {
+    console.log(snapshot.key(), snapshot.val().desc);
     addCardReferences(snapshot.key(), snapshot.val(), {});
 });
 

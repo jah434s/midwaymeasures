@@ -18,6 +18,10 @@ app.controller('mmCtrl', function ($rootScope, $scope, $firebaseObject, $firebas
 
     var bugsRef = new Firebase('https://midway-measures.firebaseio.com/defects').orderByChild('order').limitToFirst(30);
     $scope.bugs = $firebaseArray(bugsRef);
+
+    $scope.addPerson = function () {
+        $scope.people.$add($scope.newPerson);
+    }
 })
 .directive('trendChart', function () {
     return {

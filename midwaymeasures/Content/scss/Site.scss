@@ -159,36 +159,61 @@ h1, h2, h3 {
     }
 }
 
-.admin-person {
-    font-size: 1.2em;
-    border-top: 1px solid $gray-light;
-    padding: .6em 0;
-    display: block;
-    cursor: pointer;
-
-    &:hover {
-        text-decoration: none;
-        background: #efefef;
-    }
-}
-
-.admin-person-edit {
-    margin-right: .5em;
-    padding-right: .5em;
-    border-right: 1px solid darken($gray-lighter, 15%);
-    cursor: pointer;
-    position: relative;
-    top: 3px;
-
-    &:hover {
-        color: $btn-info-bg;
-    }
-}
-
 .status-option {
     display: inline-block;
     margin-right: 1em;
     margin-bottom: 0;
+}
+
+.panel-info {
+    .panel-body {
+        background-color: #F5FCFF;
+    }
+
+    .panel-heading {
+        &:hover {
+            background-color: #C1E5F7; 
+        }
+        .up {
+            display: block;
+        }
+
+        .down {
+            display: none;
+        }
+    }
+}
+
+a.panel-heading {
+    display: block;
+
+    &:hover, &:active, &:focus {
+        text-decoration: none;
+    }
+
+    &:hover {
+        background: #eee;
+    }
+
+    .up {
+        display: none;
+    }
+
+    .down {
+        display: block;
+    }
+}
+
+.panel-success {
+    .panel-heading {
+        &:hover {
+            background-color: #C9ECBA; 
+        }
+    }
+}
+
+.add-btn {
+    padding: .7em;
 }
 
 // Results
@@ -317,6 +342,7 @@ canvas {
 .buck {
     background: #FAFFF7;
     border-color: $btn-success-border;
+
     &:before {
         color: $btn-success-bg;
         content: '\f155';
@@ -326,6 +352,7 @@ canvas {
 .bug {
     background: #fafafa;
     border-color: #ccc;
+
     &:before {
         color: #666;
         content: "\f188";

@@ -5,10 +5,13 @@
 
 @section styles {
     <style>
-        .container {
-            width: 1600px;
+        @@media(min-width: 1200px) {
+            .container {
+                width: 90%;
+                max-width: 1600px;
+            }
         }
-    </style>    
+    </style>
 }
 
 <h2>@ViewBag.Title</h2>
