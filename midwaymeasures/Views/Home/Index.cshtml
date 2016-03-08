@@ -2,18 +2,48 @@
     ViewBag.Title = "Home Page";
 }
 
-<h1>Web Production Measures</h1>
+<div class="row">
+    <div class="col-md-8">
+        <h1>Web Production Measures</h1>
+    </div>
+    <div class="col-md-4 text-right">
+    <!--
+    <div class="btn-group filter-buttons">
+        <button type="button" class="btn btn-lg btn-primary" data-filter-button="HalfYear" ng-click="filterData('HalfYear')">6 Months</button>
+        <button type="button" class="btn btn-lg btn-default" data-filter-button="Year">1 Year</button>
+        <button type="button" class="btn btn-lg btn-default" data-filter-button="AllTime">All Time</button>
+    </div>
+        -->
+    </div>
+</div>
+
 <div class="row">
     <h2 class="col-xs-12">Current Iteration Progress</h2>
-    <div class=col-md-4 ng-repeat="team in teams"> 
-        <h3>Team {{ team.name }}: <b>{{ display[team.name].currentProgress }}%</b></h3>
+    <div class=col-md-4 ng-repeat="team in teams">
+        <h3>Team {{ team.name }}: <b>{{ display.teams[team.name].currentProgress }}%</b></h3>
     </div>
 </div>
 <hr />
 <div class="row">
     <h2 class="col-xs-12">Velocity</h2>
     <div class=col-md-6 ng-repeat="team in teams">
-        <h3>Team {{ team.name }}: <b>{{ display[team.name].velocityAverage }}</b></h3>
+        <h3>Team {{ team.name }}:</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>6 Months</th>
+                    <th>Year</th>
+                    <th>All Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ display.teams[team.name].velocityAverageHalfYear }}%</td>
+                    <td>{{ display.teams[team.name].velocityAverageYear }}%</td>
+                    <td>{{ display.teams[team.name].velocityAverageAllTime }}%</td>
+                </tr>
+            </tbody>
+        </table>
         <canvas trend-chart display="display" team="team.name" chart-data="velocityByIteration"></canvas>
     </div>
 </div>
@@ -21,7 +51,23 @@
 <div class="row">
     <h2 class="col-xs-12">Bug Free Work Items</h2>
     <div class=col-md-6 ng-repeat="team in teams">
-        <h3>Team {{ team.name }}: <b>{{ display[team.name].qualityAverage }}%</b></h3>
+        <h3>Team {{ team.name }}:</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>6 Months</th>
+                    <th>Year</th>
+                    <th>All Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ display.teams[team.name].qualityAverageHalfYear }}%</td>
+                    <td>{{ display.teams[team.name].qualityAverageYear }}%</td>
+                    <td>{{ display.teams[team.name].qualityAverageAllTime }}%</td>
+                </tr>
+            </tbody>
+        </table>
         <canvas trend-chart display="display" team="team.name" chart-data="qualityByIteration"></canvas>
     </div>
 </div>
@@ -29,7 +75,23 @@
 <div class="row">
     <h2 class="col-xs-12">Iteration Completion</h2>
     <div class=col-md-6 ng-repeat="team in teams">
-        <h3>Team {{ team.name }}: <b>{{ display[team.name].percentCompleteAverage }}%</b></h3>
+        <h3>Team {{ team.name }}:</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>6 Months</th>
+                    <th>Year</th>
+                    <th>All Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ display.teams[team.name].percentCompleteAverageHalfYear }}%</td>
+                    <td>{{ display.teams[team.name].percentCompleteAverageYear }}%</td>
+                    <td>{{ display.teams[team.name].percentCompleteAverageAllTime }}%</td>
+                </tr>
+            </tbody>
+        </table>
         <canvas trend-chart display="display" team="team.name" chart-data="percentCompleteByIteration"></canvas>
     </div>
 </div>

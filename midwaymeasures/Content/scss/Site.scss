@@ -116,25 +116,6 @@ h1, h2, h3 {
 
 //Admin section
 
-.sync-button {
-    margin-top: 1.3em;
-    margin-left: 2em;
-    float: right;
-
-    & > .glyphicon {
-        margin-right: .5em;
-    }
-}
-
-.admin-nav {
-    font-size: 1.6em;
-    margin-bottom: .5em;
-}
-
-.admin-list-item {
-    margin-bottom: .5em;
-}
-
 .btn-icon {
     margin-right: .5em;
     font-size: .9em;
@@ -217,6 +198,10 @@ a.panel-heading {
 }
 
 // Results
+
+.filter-buttons {
+    margin-top: 1.2em;
+}
 
 .result-section {
     margin-bottom: 2em;
@@ -358,3 +343,25 @@ canvas {
         content: "\f188";
     }
 }
+
+table {
+    margin-left: 29px;
+    width: 513px;
+    margin-bottom: 30px;
+}
+
+th {
+    background: #D9EDF7;
+    color: #111458;
+    width: 33.3%;
+}
+
+th, td {
+    padding: 5px;
+    text-align: center;
+}
+
+td {
+    font-size: 1.6em;
+}
+

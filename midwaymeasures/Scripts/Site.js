@@ -92,6 +92,19 @@ $(document).on('ready', function () {
         }
     }
 
+    ///// FILTER BUTTONS /////
+
+    $('body').on('click', '[data-filter-button]', function(e) {
+        $('[data-filter-button].btn-primary')
+            .removeClass('btn-primary')
+            .addClass('btn-default');
+        $(this)
+            .removeClass('btn-default')
+            .addClass('btn-primary');
+
+        
+    });
+
     $('body').on('click.login', '[data-login]', function (e) {
         e.preventDefault();
         $('[data-login-modal]').modal('show');
@@ -359,7 +372,6 @@ FB('cards').on('child_changed', function (snapshot) {
 
 //Every time a new card is added, add appropriate references to other objects
 FB('cards').limitToLast(20).on('child_added', function (snapshot) {
-    console.log(snapshot.key(), snapshot.val().desc);
     addCardReferences(snapshot.key(), snapshot.val(), {});
 });
 
@@ -377,7 +389,8 @@ FB('iterations').on('value', function (snapshot) {
     var iterations = snapshot.val(),
         teamsArray = [],
         displayData = {
-            iterationEndDates: []
+            iterationEndDates: [],
+            teams: {}
         };
 
     Object.keys(iterations).forEach(function (iterationKey) {
@@ -394,38 +407,46 @@ FB('iterations').on('value', function (snapshot) {
                     teamsArray.push(teamKey);
                 }
                 var teamData = iteration[teamKey];
-                if (typeof displayData[teamKey] != "object") {
-                    displayData[teamKey] = {
+                if (typeof displayData.teams[teamKey] != "object") {
+                    displayData.teams[teamKey] = {
                         percentCompleteByIteration: [],
                         velocityByIteration: [],
                         qualityByIteration: []
                     };
                 }
                 if (typeof teamData.percentComplete != 'undefined') {
-                    displayData[teamKey].percentCompleteByIteration.push(teamData.percentComplete);
+                    displayData.teams[teamKey].percentCompleteByIteration.push(teamData.percentComplete);
                 }
                 if (typeof teamData.effort != 'undefined') {
-                    displayData[teamKey].velocityByIteration.push(teamData.effort);
+                    displayData.teams[teamKey].velocityByIteration.push(teamData.effort);
                 }
                 if (typeof teamData.defects != 'undefined' && typeof teamData.cards != 'undefined') {
-                    displayData[teamKey].qualityByIteration.push(Math.round((1 - (Object.keys(teamData.defects).length / Object.keys(teamData.cards).length)) * 100));
+                    displayData.teams[teamKey].qualityByIteration.push(Math.round((1 - (Object.keys(teamData.defects).length / Object.keys(teamData.cards).length)) * 100));
                 } else {
-                    displayData[teamKey].qualityByIteration.push(100);
+                    displayData.teams[teamKey].qualityByIteration.push(100);
                 }
             }
         });
     });
 
     teamsArray.forEach(function (team) {
-        var pcArray = displayData[team].percentCompleteByIteration;
-        displayData[team].percentCompleteAverage = Math.round(average(pcArray.slice(0, -1)));
-        displayData[team].currentProgress = pcArray[pcArray.length - 1];
 
-        var vArray = displayData[team].velocityByIteration;
-        displayData[team].velocityAverage = Math.round(average(vArray.slice(0, -1)));
+        var pcArray = displayData.teams[team].percentCompleteByIteration;
+        displayData.teams[team].percentCompleteAverageAllTime = Math.round(average(pcArray.slice(0, -1)));
+        displayData.teams[team].percentCompleteAverageHalfYear = Math.round(average(pcArray.slice(-13, -1)));
+        displayData.teams[team].percentCompleteAverageYear = Math.round(average(pcArray.slice(-25, -1)));
 
-        var qArray = displayData[team].qualityByIteration;
-        displayData[team].qualityAverage = Math.round(average(qArray.slice(0, -1)));
+        displayData.teams[team].currentProgress = pcArray[pcArray.length - 1];
+
+        var vArray = displayData.teams[team].velocityByIteration;
+        displayData.teams[team].velocityAverageAllTime = Math.round(average(vArray.slice(0, -1)));
+        displayData.teams[team].velocityAverageHalfYear = Math.round(average(vArray.slice(-13, -1)));
+        displayData.teams[team].velocityAverageYear = Math.round(average(vArray.slice(-25, -1)));
+
+        var qArray = displayData.teams[team].qualityByIteration;
+        displayData.teams[team].qualityAverageAllTime = Math.round(average(qArray.slice(0, -1)));
+        displayData.teams[team].qualityAverageHalfYear = Math.round(average(qArray.slice(-13, -1)));
+        displayData.teams[team].qualityAverageYear = Math.round(average(qArray.slice(-25, -1)));
 
     });
 

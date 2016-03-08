@@ -1,3 +1,4 @@
+/// <binding BeforeBuild='compileSass' ProjectOpened='watch' />
 /// <vs BeforeBuild='compileSass' SolutionOpened='watch' />
 var gulp = require('gulp');
 var sass = require('gulp-sass');

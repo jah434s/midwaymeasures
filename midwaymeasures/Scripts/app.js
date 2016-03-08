@@ -6,6 +6,7 @@ app.controller('mmCtrl', function ($rootScope, $scope, $firebaseObject, $firebas
     var displayData = $firebaseObject(displayRef);
 
     displayData.$bindTo($scope, 'display');
+    window.data = displayData;
 
     var teamsRef = new Firebase('https://midway-measures.firebaseio.com/teams');
     $scope.teams = $firebaseArray(teamsRef);
@@ -22,6 +23,10 @@ app.controller('mmCtrl', function ($rootScope, $scope, $firebaseObject, $firebas
     $scope.addPerson = function () {
         $scope.people.$add($scope.newPerson);
     }
+
+    $scope.filterData = function(filter) {
+        console.log(filter);
+    }
 })
 .directive('trendChart', function () {
     return {
@@ -32,7 +37,7 @@ app.controller('mmCtrl', function ($rootScope, $scope, $firebaseObject, $firebas
         },
         link: function (scope, elem, attrs) {
             scope.$watch('display', function (newValue, oldValue) {
-                makeChart([scope.display[scope.team][attrs.chartData].slice(0, -1)], scope.display.iterationEndDates.slice(0, -1), elem, { bezierCurve: false });
+                makeChart([scope.display.teams[scope.team][attrs.chartData].slice(0, -1)], scope.display.iterationEndDates.slice(0, -1), elem, { bezierCurve: false });
             });
         }
     }
